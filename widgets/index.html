@@ -7,10 +7,9 @@
         body {
             background-color: #191919; 
             margin: 0;
-            padding: 15px;
+            padding: 10px;
             display: flex;
             justify-content: center;
-            /* タイトルを消したので、上詰めで配置されるように設定 */
             align-items: flex-start;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
         }
@@ -18,26 +17,26 @@
         .container {
             display: flex;
             flex-direction: column;
-            /* 幅をさらに狭く設定（お好みで 180px〜220px 程度で調整してください） */
+            /* さらに幅を絞って180pxに設定 */
             width: 100%;
-            max-width: 200px; 
-            gap: 8px;
+            max-width: 180px; 
+            gap: 6px;
         }
 
         .nav-item {
             text-decoration: none;
             display: flex;
             align-items: center;
-            background-color: #2a2a2a;
-            padding: 8px 12px;
+            background-color: #262626;
+            padding: 7px 10px;
             border-radius: 6px;
             border: 1px solid #333;
-            transition: background-color 0.2s;
+            transition: all 0.2s ease;
         }
 
         .icon-box {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             margin-right: 10px;
             flex-shrink: 0;
             display: flex;
@@ -52,17 +51,17 @@
         }
 
         .label {
-            font-size: 13px;
-            color: #ddd;
+            font-size: 12px;
+            color: #ccc;
             font-weight: 500;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        /* ホバー：背景を少し明るく */
         .nav-item:hover {
-            background-color: #383838;
+            background-color: #333;
+            border-color: #444;
         }
     </style>
 </head>
@@ -81,10 +80,6 @@
         <div class="icon-box"><img src="../assets/carenet.png"></div>
         <span class="label">CareNet</span>
     </a>
-    <a href="https://www.itmedia.co.jp/" class="nav-item" target="_blank">
-        <div class="icon-box"><img src="../assets/ITmedia.jpg"></div>
-        <span class="label">ITmedia</span>
-    </a>
     <a href="https://newspicks.com/" class="nav-item" target="_blank">
         <div class="icon-box"><img src="../assets/Newspicks.png"></div>
         <span class="label">NewsPicks</span>
@@ -93,25 +88,9 @@
         <div class="icon-box"><img src="../assets/Ledge.jpeg"></div>
         <span class="label">Ledge.ai</span>
     </a>
-    <a href="https://www.yahoo.co.jp/" class="nav-item" target="_blank">
-        <div class="icon-box"><img src="../assets/Yahoo!.png"></div>
-        <span class="label">Yahoo!</span>
-    </a>
     <a href="https://ict-enews.net/" class="nav-item" target="_blank">
         <div class="icon-box"><img src="../assets/ICT教育ニュース.png"></div>
         <span class="label">ICT教育</span>
-    </a>
-    <a href="https://www.youtube.com/" class="nav-item" target="_blank">
-        <div class="icon-box"><img src="../assets/youtube.png"></div>
-        <span class="label">YouTube</span>
-    </a>
-    <a href="https://gemini.google.com/" class="nav-item" target="_blank">
-        <div class="icon-box"><img src="../assets/Gemini.jpg"></div>
-        <span class="label">Gemini</span>
-    </a>
-    <a href="https://script.google.com/u/0/home/projects/1GPS_MHABaeux_NNVAHpz1Wb50Kfsh5lGJX_EX_zq7KCuqdSzL1jc0OoX/edit/" class="nav-item" target="_blank">
-        <div class="icon-box"><img src="../assets/GAS.png"></div>
-        <span class="label">GAS</span>
     </a>
     <a href="https://github.com/" class="nav-item" target="_blank">
         <div class="icon-box"><img src="../assets/Github.png"></div>
