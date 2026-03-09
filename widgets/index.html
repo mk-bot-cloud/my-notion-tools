@@ -7,51 +7,38 @@
         body {
             background-color: #191919; 
             margin: 0;
+            padding: 15px;
             display: flex;
-            flex-direction: column;
             justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            padding: 20px 0;
-        }
-
-        .title {
-            color: #888888;
-            font-size: 14px;
-            font-weight: 600;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            margin-bottom: 20px;
-            padding-bottom: 8px;
-            width: 240px;
-            text-align: center;
-            border-bottom: 1px solid #333;
+            /* タイトルを消したので、上詰めで配置されるように設定 */
+            align-items: flex-start;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
         }
 
         .container {
             display: flex;
-            flex-direction: column; /* 縦に並べる（横並びが良ければここを grid に戻せます） */
-            width: 90%;
-            max-width: 300px; /* ボタンの横幅 */
-            gap: 10px;
+            flex-direction: column;
+            /* 幅をさらに狭く設定（お好みで 180px〜220px 程度で調整してください） */
+            width: 100%;
+            max-width: 200px; 
+            gap: 8px;
         }
 
         .nav-item {
             text-decoration: none;
             display: flex;
             align-items: center;
-            background-color: #2a2a2a; /* ボタンの背景色 */
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 1px solid #3d3d3d;
-            transition: all 0.2s ease;
+            background-color: #2a2a2a;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #333;
+            transition: background-color 0.2s;
         }
 
         .icon-box {
-            width: 24px;
-            height: 24px;
-            margin-right: 12px;
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
             flex-shrink: 0;
             display: flex;
             justify-content: center;
@@ -62,32 +49,24 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
-            border-radius: 4px;
         }
 
         .label {
-            font-size: 14px;
-            color: #ccc;
+            font-size: 13px;
+            color: #ddd;
             font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        /* ホバー時の挙動 */
+        /* ホバー：背景を少し明るく */
         .nav-item:hover {
             background-color: #383838;
-            border-color: #555;
-            transform: translateX(4px); /* 少し右にずれる演出 */
-        }
-        .nav-item:hover .label {
-            color: #ffffff;
-        }
-        .nav-item:active {
-            transform: scale(0.98);
         }
     </style>
 </head>
 <body>
-
-<div class="title">Quick Links</div>
 
 <div class="container">
     <a href="https://pubmed.ncbi.nlm.nih.gov/" class="nav-item" target="_blank">
@@ -111,7 +90,8 @@
         <span class="label">NewsPicks</span>
     </a>
     <a href="https://ledge.ai/" class="nav-item" target="_blank">
-        <div class="icon-box"><img src="../assets/Ledge.ai</span>
+        <div class="icon-box"><img src="../assets/Ledge.jpeg"></div>
+        <span class="label">Ledge.ai</span>
     </a>
     <a href="https://www.yahoo.co.jp/" class="nav-item" target="_blank">
         <div class="icon-box"><img src="../assets/Yahoo!.png"></div>
@@ -121,13 +101,17 @@
         <div class="icon-box"><img src="../assets/ICT教育ニュース.png"></div>
         <span class="label">ICT教育</span>
     </a>
+    <a href="https://www.youtube.com/" class="nav-item" target="_blank">
+        <div class="icon-box"><img src="../assets/youtube.png"></div>
+        <span class="label">YouTube</span>
+    </a>
     <a href="https://gemini.google.com/" class="nav-item" target="_blank">
         <div class="icon-box"><img src="../assets/Gemini.jpg"></div>
         <span class="label">Gemini</span>
     </a>
-    <a href="https://script.google.com/u/0/home/projects/..." class="nav-item" target="_blank">
+    <a href="https://script.google.com/u/0/home/projects/1GPS_MHABaeux_NNVAHpz1Wb50Kfsh5lGJX_EX_zq7KCuqdSzL1jc0OoX/edit/" class="nav-item" target="_blank">
         <div class="icon-box"><img src="../assets/GAS.png"></div>
-        <span class="label">Google Apps Script</span>
+        <span class="label">GAS</span>
     </a>
     <a href="https://github.com/" class="nav-item" target="_blank">
         <div class="icon-box"><img src="../assets/Github.png"></div>
