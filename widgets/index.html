@@ -12,76 +12,77 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px 0;
         }
 
         .title {
             color: #888888;
-            font-size: 12px;
+            font-size: 14px;
             font-weight: 600;
-            letter-spacing: 0.12em;
+            letter-spacing: 0.1em;
             text-transform: uppercase;
-            margin-bottom: 12px;
-            padding-bottom: 5px;
-            width: 170px;
+            margin-bottom: 20px;
+            padding-bottom: 8px;
+            width: 240px;
             text-align: center;
             border-bottom: 1px solid #333;
         }
 
         .container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            max-width: 190px; 
-            gap: 12px;
-            padding: 5px 10px 15px;
+            display: flex;
+            flex-direction: column; /* 縦に並べる（横並びが良ければここを grid に戻せます） */
+            width: 90%;
+            max-width: 300px; /* ボタンの横幅 */
+            gap: 10px;
         }
 
         .nav-item {
             text-decoration: none;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            width: 52px;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            background-color: #2a2a2a; /* ボタンの背景色 */
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #3d3d3d;
+            transition: all 0.2s ease;
         }
 
         .icon-box {
-            width: 42px;
-            height: 42px;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
+            width: 24px;
+            height: 24px;
+            margin-right: 12px;
+            flex-shrink: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 3px 5px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
         }
 
         .icon-box img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
+            border-radius: 4px;
         }
 
         .label {
-            font-size: 8px;
-            color: #888;
-            margin-top: 6px;
+            font-size: 14px;
+            color: #ccc;
             font-weight: 500;
-            text-align: center;
-            white-space: nowrap;
-            transition: color 0.3s ease;
-            width: 100%;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
-        .nav-item:hover { transform: translateY(-3px); }
-        .nav-item:hover .icon-box { box-shadow: 0 8px 15px rgba(0,0,0,0.5); }
-        .nav-item:hover .label { color: #ffffff; }
-        .nav-item:active { transform: translateY(-1px) scale(0.95); }
+        /* ホバー時の挙動 */
+        .nav-item:hover {
+            background-color: #383838;
+            border-color: #555;
+            transform: translateX(4px); /* 少し右にずれる演出 */
+        }
+        .nav-item:hover .label {
+            color: #ffffff;
+        }
+        .nav-item:active {
+            transform: scale(0.98);
+        }
     </style>
 </head>
 <body>
@@ -95,13 +96,12 @@
     </a>
     <a href="https://www.medicalonline.jp/" class="nav-item" target="_blank">
         <div class="icon-box"><img src="../assets/メディカルオンライン.jpg"></div>
-        <span class="label">MedOnline</span>
+        <span class="label">Medical Online</span>
     </a>
     <a href="https://www.carenet.com/" class="nav-item" target="_blank">
         <div class="icon-box"><img src="../assets/carenet.png"></div>
         <span class="label">CareNet</span>
     </a>
-
     <a href="https://www.itmedia.co.jp/" class="nav-item" target="_blank">
         <div class="icon-box"><img src="../assets/ITmedia.jpg"></div>
         <span class="label">ITmedia</span>
@@ -111,10 +111,8 @@
         <span class="label">NewsPicks</span>
     </a>
     <a href="https://ledge.ai/" class="nav-item" target="_blank">
-        <div class="icon-box"><img src="../assets/Ledge.jpeg"></div>
-        <span class="label">Ledge.ai</span>
+        <div class="icon-box"><img src="../assets/Ledge.ai</span>
     </a>
-
     <a href="https://www.yahoo.co.jp/" class="nav-item" target="_blank">
         <div class="icon-box"><img src="../assets/Yahoo!.png"></div>
         <span class="label">Yahoo!</span>
@@ -123,24 +121,18 @@
         <div class="icon-box"><img src="../assets/ICT教育ニュース.png"></div>
         <span class="label">ICT教育</span>
     </a>
-    <a href="https://www.youtube.com/" class="nav-item" target="_blank">
-        <div class="icon-box"><img src="../assets/youtube.png"></div>
-        <span class="label">YouTube</span>
-    </a>
-
     <a href="https://gemini.google.com/" class="nav-item" target="_blank">
         <div class="icon-box"><img src="../assets/Gemini.jpg"></div>
         <span class="label">Gemini</span>
     </a>
-    <a href="https://script.google.com/u/0/home/projects/1GPS_MHABaeux_NNVAHpz1Wb50Kfsh5lGJX_EX_zq7KCuqdSzL1jc0OoX/edit/" class="nav-item" target="_blank">
+    <a href="https://script.google.com/u/0/home/projects/..." class="nav-item" target="_blank">
         <div class="icon-box"><img src="../assets/GAS.png"></div>
-        <span class="label">GAS</span>
+        <span class="label">Google Apps Script</span>
     </a>
     <a href="https://github.com/" class="nav-item" target="_blank">
         <div class="icon-box"><img src="../assets/Github.png"></div>
         <span class="label">GitHub</span>
     </a>
-
     <a href="https://www.make.com/en/login" class="nav-item" target="_blank">
         <div class="icon-box"><img src="../assets/make.png"></div>
         <span class="label">Make</span>
