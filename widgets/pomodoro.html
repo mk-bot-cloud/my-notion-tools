@@ -9,8 +9,8 @@
       --bg-color: #191919; 
       --text-color: #FFFFFF;
       --sub-text: #737373;
-      --focus-color: #eb5757; 
-      --break-color: #2eaadc; 
+      --focus-color: #eb5757;
+      --break-color: #2eaadc;
       --button-bg: #252525;
     }
     body {
@@ -22,85 +22,79 @@
       height: 100vh;
       margin: 0;
       color: var(--text-color);
-      overflow: hidden;
+      transition: background 0.3s;
     }
+    /* 時間終了時の点滅アニメーション */
+    @keyframes flash {
+      0%, 100% { background: var(--bg-color); }
+      50% { background: #b91c1c; }
+    }
+    .timer-finished {
+      animation: flash 0.8s infinite;
+    }
+
     .timer-container {
       text-align: center;
-      background: var(--bg-color);
-      padding: 10px;
-      width: 190px;
+      width: 220px;
+      z-index: 10;
     }
     #status {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 700;
-      margin-bottom: 2px;
+      margin-bottom: 5px;
       color: var(--sub-text);
       text-transform: uppercase;
-      letter-spacing: 0.1em;
     }
     #time {
-      font-size: 3.5rem;
+      font-size: 4rem;
       font-weight: 700;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       font-variant-numeric: tabular-nums;
-      letter-spacing: -0.04em;
     }
-    
     .settings {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
     }
     .setting-group {
       display: flex;
       flex-direction: column;
       align-items: center;
-      width: 48%;
-      font-size: 0.6rem;
+      width: 45%;
+      font-size: 0.65rem;
       color: var(--sub-text);
     }
     .setting-group input {
-      width: 35px;
+      width: 40px;
       border: none;
-      border-bottom: 1px solid #333;
-      padding: 2px;
+      border-bottom: 1px solid #444;
+      padding: 4px;
       text-align: center;
-      font-weight: 600;
       color: var(--text-color);
       background: transparent;
       outline: none;
-      margin-top: 2px;
+      font-size: 1rem;
     }
-
     .controls {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
     button {
       cursor: pointer;
       border: none;
-      padding: 10px 0;
-      border-radius: 6px;
+      padding: 12px 0;
+      border-radius: 8px;
       font-weight: 700;
-      font-size: 0.8rem;
-      transition: all 0.2s;
-      width: 100%;
+      transition: opacity 0.2s;
     }
-    button:hover { filter: brightness(1.2); }
-    button:active { transform: scale(0.98); }
-
+    button:active { opacity: 0.7; }
     #focusBtn { background: var(--focus-color); color: white; }
     #breakBtn { background: var(--break-color); color: white; }
-    #stopBtn { 
-      background: var(--button-bg); 
-      color: var(--sub-text); 
-      font-size: 0.7rem;
-      padding: 6px 0;
-    }
+    #stopBtn { background: var(--button-bg); color: var(--sub-text); }
   </style>
 </head>
-<body>
+<body id="bodyTag">
   <div class="timer-container">
     <div id="status">Ready</div>
     <div id="time">25:00</div>
@@ -108,11 +102,11 @@
     <div class="settings">
       <div class="setting-group">
         <label>集中(分)</label>
-        <input type="number" id="focusInput" value="25" min="1" max="99">
+        <input type="number" id="focusInput" value="25">
       </div>
       <div class="setting-group">
         <label>休憩(分)</label>
-        <input type="number" id="breakInput" value="5" min="1" max="99">
+        <input type="number" id="breakInput" value="5">
       </div>
     </div>
 
@@ -131,22 +125,14 @@
     const statusText = document.getElementById('status');
     const focusInput = document.getElementById('focusInput');
     const breakInput = document.getElementById('breakInput');
+    const bodyTag = document.getElementById('bodyTag');
 
-    // 1. 通知の許可をリクエスト
-    function requestNotificationPermission() {
-      if ("Notification" in window) {
-        Notification.requestPermission();
-      }
-    }
-
-    // 2. 表示の更新（タブのタイトルにも反映）
     function updateDisplay() {
       const mins = Math.floor(timeLeft / 60);
       const secs = timeLeft % 60;
       const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
       timeDisplay.textContent = timeStr;
       
-      // 実行中ならタブのタイトルに時間を出す
       if (timerId) {
         document.title = `(${timeStr}) ${currentMode}`;
       } else {
@@ -154,18 +140,29 @@
       }
     }
 
-    // 3. 通知を送る
-    function sendNotification(title, body) {
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification(title, { 
-          body: body,
-          icon: "https://cdn-icons-png.flaticon.com/512/2523/2523581.png" 
-        });
-      }
+    function notifyUser(modeName) {
+      // 1. 背景を点滅させる
+      bodyTag.classList.add('timer-finished');
+      
+      // 2. タブを強調
+      document.title = "！！！ TIME UP ！！！";
+
+      // 3. 音を鳴らす
+      const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+      audio.play().catch(e => console.log("Audio blocked"));
+
+      // 4. ブラウザ標準アラート（Windows設定を無視して最前面に出る）
+      setTimeout(() => {
+        alert(`${modeName} が終了しました！`);
+        // アラートの「OK」を押した後に点滅を止める
+        bodyTag.classList.remove('timer-finished');
+        document.title = "Pomodoro Timer";
+      }, 100);
     }
 
     function startTimer(minutes, modeName, color) {
       clearInterval(timerId);
+      bodyTag.classList.remove('timer-finished');
       currentMode = modeName;
       timeLeft = minutes * 60;
       statusText.textContent = modeName;
@@ -179,39 +176,31 @@
         if (timeLeft <= 0) {
           clearInterval(timerId);
           timerId = null;
-          statusText.textContent = "Finished!";
-          statusText.style.color = "var(--sub-text)";
-          document.title = "Time Up!";
-          
-          // 音を鳴らす
-          const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
-          audio.play().catch(e => console.log("Audio play failed:", e));
-          
-          // デスクトップ通知を表示
-          sendNotification("時間になりました！", `${modeName} が終了しました。`);
+          updateDisplay();
+          notifyUser(modeName);
         }
       }, 1000);
     }
 
     document.getElementById('focusBtn').addEventListener('click', () => {
-      startTimer(parseInt(focusInput.value), "Focus Now", "var(--focus-color)");
+      startTimer(parseInt(focusInput.value), "Focus", "var(--focus-color)");
     });
 
     document.getElementById('breakBtn').addEventListener('click', () => {
-      startTimer(parseInt(breakInput.value), "Break Now", "var(--break-color)");
+      startTimer(parseInt(breakInput.value), "Break", "var(--break-color)");
     });
 
     document.getElementById('stopBtn').addEventListener('click', () => {
       clearInterval(timerId);
       timerId = null;
+      bodyTag.classList.remove('timer-finished');
       statusText.textContent = "Ready";
       statusText.style.color = "var(--sub-text)";
       timeLeft = parseInt(focusInput.value) * 60;
       updateDisplay();
     });
 
-    // 初期化
-    requestNotificationPermission();
+    // 初期起動表示
     timeLeft = parseInt(focusInput.value) * 60;
     updateDisplay();
   </script>
