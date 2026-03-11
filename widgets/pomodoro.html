@@ -25,10 +25,10 @@
       overflow: hidden;
       transition: background 0.3s;
     }
-
+    /* 時間終了時の視覚的な合図（点滅） */
     @keyframes flash {
       0%, 100% { background: var(--bg-color); }
-      50% { background: #451a1a; }
+      50% { background: #451a1a; } /* 控えめな赤色で点滅 */
     }
     .timer-finished { animation: flash 0.8s infinite; }
 
@@ -36,7 +36,7 @@
       text-align: center;
       background: var(--bg-color);
       padding: 10px;
-      width: 190px; 
+      width: 190px; /* ここを小さく固定しました */
     }
     #status {
       font-size: 0.7rem;
@@ -47,7 +47,7 @@
       letter-spacing: 0.1em;
     }
     #time {
-      font-size: 3.5rem; 
+      font-size: 3.5rem; /* 数字も元のサイズに */
       font-weight: 700;
       margin-bottom: 15px;
       font-variant-numeric: tabular-nums;
@@ -144,16 +144,18 @@
       const secs = timeLeft % 60;
       const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
       timeDisplay.textContent = timeStr;
+      // タブのタイトルでも知らせる
       document.title = timerId ? `(${timeStr}) ${currentMode}` : "Pomodoro Timer";
     }
 
     function notifyUser(modeName) {
-      bodyTag.classList.add('timer-finished');
-      document.title = "【TIME UP!】";
+      bodyTag.classList.add('timer-finished'); // 画面を点滅させる
       
+      // 音を鳴らす（ブラウザのクリックが必要）
       const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
       audio.play().catch(e => {});
 
+      // OSの通知がオフでも、これが最前面に飛び出します
       setTimeout(() => {
         alert(`${modeName} が終了しました！`);
         bodyTag.classList.remove('timer-finished');
@@ -199,6 +201,7 @@
       updateDisplay();
     });
 
+    // 初期化
     timeLeft = parseInt(focusInput.value) * 60;
     updateDisplay();
   </script>
