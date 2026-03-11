@@ -22,76 +22,88 @@
       height: 100vh;
       margin: 0;
       color: var(--text-color);
+      overflow: hidden;
       transition: background 0.3s;
     }
-    /* 時間終了時の点滅アニメーション */
+
     @keyframes flash {
       0%, 100% { background: var(--bg-color); }
-      50% { background: #b91c1c; }
+      50% { background: #451a1a; }
     }
-    .timer-finished {
-      animation: flash 0.8s infinite;
-    }
+    .timer-finished { animation: flash 0.8s infinite; }
 
     .timer-container {
       text-align: center;
-      width: 220px;
-      z-index: 10;
+      background: var(--bg-color);
+      padding: 10px;
+      width: 190px; 
     }
     #status {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 700;
-      margin-bottom: 5px;
+      margin-bottom: 2px;
       color: var(--sub-text);
       text-transform: uppercase;
+      letter-spacing: 0.1em;
     }
     #time {
-      font-size: 4rem;
+      font-size: 3.5rem; 
       font-weight: 700;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       font-variant-numeric: tabular-nums;
+      letter-spacing: -0.04em;
     }
     .settings {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
     .setting-group {
       display: flex;
       flex-direction: column;
       align-items: center;
-      width: 45%;
-      font-size: 0.65rem;
+      width: 48%;
+      font-size: 0.6rem;
       color: var(--sub-text);
     }
     .setting-group input {
-      width: 40px;
+      width: 35px;
       border: none;
-      border-bottom: 1px solid #444;
-      padding: 4px;
+      border-bottom: 1px solid #333;
+      padding: 2px;
       text-align: center;
+      font-weight: 600;
       color: var(--text-color);
       background: transparent;
       outline: none;
-      font-size: 1rem;
+      margin-top: 2px;
     }
     .controls {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
     button {
       cursor: pointer;
       border: none;
-      padding: 12px 0;
-      border-radius: 8px;
+      padding: 10px 0;
+      border-radius: 6px;
       font-weight: 700;
-      transition: opacity 0.2s;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+      width: 100%;
     }
-    button:active { opacity: 0.7; }
+    button:hover { filter: brightness(1.2); }
+    button:active { transform: scale(0.98); }
+
     #focusBtn { background: var(--focus-color); color: white; }
     #breakBtn { background: var(--break-color); color: white; }
-    #stopBtn { background: var(--button-bg); color: var(--sub-text); }
+    #stopBtn { 
+      background: var(--button-bg); 
+      color: var(--sub-text); 
+      font-size: 0.7rem;
+      padding: 6px 0;
+    }
   </style>
 </head>
 <body id="bodyTag">
@@ -102,11 +114,11 @@
     <div class="settings">
       <div class="setting-group">
         <label>集中(分)</label>
-        <input type="number" id="focusInput" value="25">
+        <input type="number" id="focusInput" value="25" min="1" max="99">
       </div>
       <div class="setting-group">
         <label>休憩(分)</label>
-        <input type="number" id="breakInput" value="5">
+        <input type="number" id="breakInput" value="5" min="1" max="99">
       </div>
     </div>
 
@@ -132,29 +144,18 @@
       const secs = timeLeft % 60;
       const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
       timeDisplay.textContent = timeStr;
-      
-      if (timerId) {
-        document.title = `(${timeStr}) ${currentMode}`;
-      } else {
-        document.title = "Pomodoro Timer";
-      }
+      document.title = timerId ? `(${timeStr}) ${currentMode}` : "Pomodoro Timer";
     }
 
     function notifyUser(modeName) {
-      // 1. 背景を点滅させる
       bodyTag.classList.add('timer-finished');
+      document.title = "【TIME UP!】";
       
-      // 2. タブを強調
-      document.title = "！！！ TIME UP ！！！";
-
-      // 3. 音を鳴らす
       const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
-      audio.play().catch(e => console.log("Audio blocked"));
+      audio.play().catch(e => {});
 
-      // 4. ブラウザ標準アラート（Windows設定を無視して最前面に出る）
       setTimeout(() => {
         alert(`${modeName} が終了しました！`);
-        // アラートの「OK」を押した後に点滅を止める
         bodyTag.classList.remove('timer-finished');
         document.title = "Pomodoro Timer";
       }, 100);
@@ -164,19 +165,17 @@
       clearInterval(timerId);
       bodyTag.classList.remove('timer-finished');
       currentMode = modeName;
-      timeLeft = minutes * 60;
-      statusText.textContent = modeName;
+      timeLeft = (minutes || 1) * 60;
+      statusText.textContent = modeName + " Now";
       statusText.style.color = color;
       updateDisplay();
 
       timerId = setInterval(() => {
         timeLeft--;
         updateDisplay();
-        
         if (timeLeft <= 0) {
           clearInterval(timerId);
           timerId = null;
-          updateDisplay();
           notifyUser(modeName);
         }
       }, 1000);
@@ -200,7 +199,6 @@
       updateDisplay();
     });
 
-    // 初期起動表示
     timeLeft = parseInt(focusInput.value) * 60;
     updateDisplay();
   </script>
