@@ -11,7 +11,6 @@
       --sub-text: #737373;
       --focus-color: #eb5757;
       --break-color: #2eaadc;
-      --button-bg: #252525;
     }
     body {
       background: var(--bg-color);
@@ -23,20 +22,15 @@
       margin: 0;
       color: var(--text-color);
       overflow: hidden;
-      transition: background 0.3s;
     }
-    /* 時間終了時の視覚的な合図（点滅） */
-    @keyframes flash {
-      0%, 100% { background: var(--bg-color); }
-      50% { background: #451a1a; } /* 控えめな赤色で点滅 */
+    /* 終了時に画面全体を赤くするクラス */
+    body.time-up {
+      background: #b91c1c !important;
     }
-    .timer-finished { animation: flash 0.8s infinite; }
 
     .timer-container {
       text-align: center;
-      background: var(--bg-color);
-      padding: 10px;
-      width: 190px; /* ここを小さく固定しました */
+      width: 190px;
     }
     #status {
       font-size: 0.7rem;
@@ -44,14 +38,12 @@
       margin-bottom: 2px;
       color: var(--sub-text);
       text-transform: uppercase;
-      letter-spacing: 0.1em;
     }
     #time {
-      font-size: 3.5rem; /* 数字も元のサイズに */
+      font-size: 3.5rem;
       font-weight: 700;
       margin-bottom: 15px;
       font-variant-numeric: tabular-nums;
-      letter-spacing: -0.04em;
     }
     .settings {
       display: flex;
@@ -72,11 +64,9 @@
       border-bottom: 1px solid #333;
       padding: 2px;
       text-align: center;
-      font-weight: 600;
       color: var(--text-color);
       background: transparent;
       outline: none;
-      margin-top: 2px;
     }
     .controls {
       display: flex;
@@ -90,119 +80,100 @@
       border-radius: 6px;
       font-weight: 700;
       font-size: 0.8rem;
-      transition: all 0.2s;
       width: 100%;
     }
-    button:hover { filter: brightness(1.2); }
-    button:active { transform: scale(0.98); }
-
     #focusBtn { background: var(--focus-color); color: white; }
     #breakBtn { background: var(--break-color); color: white; }
-    #stopBtn { 
-      background: var(--button-bg); 
-      color: var(--sub-text); 
-      font-size: 0.7rem;
-      padding: 6px 0;
-    }
+    #stopBtn { background: #252525; color: var(--sub-text); }
   </style>
 </head>
 <body id="bodyTag">
   <div class="timer-container">
     <div id="status">Ready</div>
     <div id="time">25:00</div>
-    
     <div class="settings">
       <div class="setting-group">
-        <label>集中(分)</label>
-        <input type="number" id="focusInput" value="25" min="1" max="99">
+        <label>集中</label>
+        <input type="number" id="focusInput" value="25">
       </div>
       <div class="setting-group">
-        <label>休憩(分)</label>
-        <input type="number" id="breakInput" value="5" min="1" max="99">
+        <label>休憩</label>
+        <input type="number" id="breakInput" value="5">
       </div>
     </div>
-
     <div class="controls">
       <button id="focusBtn">集中スタート</button>
       <button id="breakBtn">休憩スタート</button>
-      <button id="stopBtn">RESET / STOP</button>
+      <button id="stopBtn">RESET</button>
     </div>
   </div>
 
   <script>
     let timeLeft;
     let timerId = null;
-    let currentMode = "";
-    const timeDisplay = document.getElementById('time');
-    const statusText = document.getElementById('status');
-    const focusInput = document.getElementById('focusInput');
-    const breakInput = document.getElementById('breakInput');
-    const bodyTag = document.getElementById('bodyTag');
+    let alertInterval = null;
+    const body = document.getElementById('bodyTag');
 
     function updateDisplay() {
       const mins = Math.floor(timeLeft / 60);
       const secs = timeLeft % 60;
       const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
-      timeDisplay.textContent = timeStr;
-      // タブのタイトルでも知らせる
-      document.title = timerId ? `(${timeStr}) ${currentMode}` : "Pomodoro Timer";
+      document.getElementById('time').textContent = timeStr;
     }
 
-    function notifyUser(modeName) {
-      bodyTag.classList.add('timer-finished'); // 画面を点滅させる
+    function notify() {
+      // 1. 画面を真っ赤にする
+      body.classList.add('time-up');
       
-      // 音を鳴らす（ブラウザのクリックが必要）
-      const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
-      audio.play().catch(e => {});
+      // 2. タブの名前を激しく点滅させる（他のタブを見ていても気づくように）
+      let toggle = true;
+      alertInterval = setInterval(() => {
+        document.title = toggle ? "！！！時間です！！！" : "　　　　　　　　　";
+        toggle = !toggle;
+      }, 500);
 
-      // OSの通知がオフでも、これが最前面に飛び出します
+      // 3. ブラウザ標準のアラートを出す
+      // アラートが出ると、ブラウザのタブが「ピコピコ」光ります
       setTimeout(() => {
-        alert(`${modeName} が終了しました！`);
-        bodyTag.classList.remove('timer-finished');
-        document.title = "Pomodoro Timer";
+        alert("タイマーが終了しました！");
+        stopAlert();
       }, 100);
     }
 
-    function startTimer(minutes, modeName, color) {
-      clearInterval(timerId);
-      bodyTag.classList.remove('timer-finished');
-      currentMode = modeName;
-      timeLeft = (minutes || 1) * 60;
-      statusText.textContent = modeName + " Now";
-      statusText.style.color = color;
-      updateDisplay();
+    function stopAlert() {
+      body.classList.remove('time-up');
+      clearInterval(alertInterval);
+      document.title = "Pomodoro Timer";
+    }
 
+    function startTimer(min, mode, color) {
+      stopAlert();
+      clearInterval(timerId);
+      timeLeft = min * 60;
+      document.getElementById('status').textContent = mode;
+      document.getElementById('status').style.color = color;
+      
       timerId = setInterval(() => {
         timeLeft--;
         updateDisplay();
         if (timeLeft <= 0) {
           clearInterval(timerId);
-          timerId = null;
-          notifyUser(modeName);
+          notify();
         }
       }, 1000);
     }
 
-    document.getElementById('focusBtn').addEventListener('click', () => {
-      startTimer(parseInt(focusInput.value), "Focus", "var(--focus-color)");
-    });
-
-    document.getElementById('breakBtn').addEventListener('click', () => {
-      startTimer(parseInt(breakInput.value), "Break", "var(--break-color)");
-    });
-
-    document.getElementById('stopBtn').addEventListener('click', () => {
+    document.getElementById('focusBtn').onclick = () => startTimer(document.getElementById('focusInput').value, "Focus", "var(--focus-color)");
+    document.getElementById('breakBtn').onclick = () => startTimer(document.getElementById('breakInput').value, "Break", "var(--break-color)");
+    document.getElementById('stopBtn').onclick = () => {
       clearInterval(timerId);
-      timerId = null;
-      bodyTag.classList.remove('timer-finished');
-      statusText.textContent = "Ready";
-      statusText.style.color = "var(--sub-text)";
-      timeLeft = parseInt(focusInput.value) * 60;
+      stopAlert();
+      document.getElementById('status').textContent = "Ready";
+      timeLeft = document.getElementById('focusInput').value * 60;
       updateDisplay();
-    });
+    };
 
-    // 初期化
-    timeLeft = parseInt(focusInput.value) * 60;
+    timeLeft = 25 * 60;
     updateDisplay();
   </script>
 </body>
