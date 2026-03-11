@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pomodoro Timer</title>
   <style>
     :root {
       --bg-color: #191919; 
@@ -89,20 +90,14 @@
     button:hover { filter: brightness(1.2); }
     button:active { transform: scale(0.98); }
 
-    /* 集中開始ボタン */
     #focusBtn { background: var(--focus-color); color: white; }
-    /* 休憩開始ボタン */
     #breakBtn { background: var(--break-color); color: white; }
-    /* 停止・リセットボタン */
     #stopBtn { 
       background: var(--button-bg); 
       color: var(--sub-text); 
       font-size: 0.7rem;
       padding: 6px 0;
     }
-
-    /* 実行中のアニメーション（任意） */
-    .running { box-shadow: 0 0 10px rgba(255,255,255,0.1); }
   </style>
 </head>
 <body>
@@ -131,19 +126,47 @@
   <script>
     let timeLeft;
     let timerId = null;
+    let currentMode = "";
     const timeDisplay = document.getElementById('time');
     const statusText = document.getElementById('status');
     const focusInput = document.getElementById('focusInput');
     const breakInput = document.getElementById('breakInput');
 
+    // 1. 通知の許可をリクエスト
+    function requestNotificationPermission() {
+      if ("Notification" in window) {
+        Notification.requestPermission();
+      }
+    }
+
+    // 2. 表示の更新（タブのタイトルにも反映）
     function updateDisplay() {
       const mins = Math.floor(timeLeft / 60);
       const secs = timeLeft % 60;
-      timeDisplay.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+      const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+      timeDisplay.textContent = timeStr;
+      
+      // 実行中ならタブのタイトルに時間を出す
+      if (timerId) {
+        document.title = `(${timeStr}) ${currentMode}`;
+      } else {
+        document.title = "Pomodoro Timer";
+      }
+    }
+
+    // 3. 通知を送る
+    function sendNotification(title, body) {
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(title, { 
+          body: body,
+          icon: "https://cdn-icons-png.flaticon.com/512/2523/2523581.png" 
+        });
+      }
     }
 
     function startTimer(minutes, modeName, color) {
       clearInterval(timerId);
+      currentMode = modeName;
       timeLeft = minutes * 60;
       statusText.textContent = modeName;
       statusText.style.color = color;
@@ -152,11 +175,20 @@
       timerId = setInterval(() => {
         timeLeft--;
         updateDisplay();
+        
         if (timeLeft <= 0) {
           clearInterval(timerId);
           timerId = null;
           statusText.textContent = "Finished!";
-          new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg').play();
+          statusText.style.color = "var(--sub-text)";
+          document.title = "Time Up!";
+          
+          // 音を鳴らす
+          const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+          audio.play().catch(e => console.log("Audio play failed:", e));
+          
+          // デスクトップ通知を表示
+          sendNotification("時間になりました！", `${modeName} が終了しました。`);
         }
       }, 1000);
     }
@@ -179,6 +211,7 @@
     });
 
     // 初期化
+    requestNotificationPermission();
     timeLeft = parseInt(focusInput.value) * 60;
     updateDisplay();
   </script>
