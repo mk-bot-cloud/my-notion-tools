@@ -6,23 +6,23 @@
   <title>Pomodoro Timer</title>
   <style>
     :root {
-      /* Notionの完全なダークモード色 (#191919) */
+      /* Notionのダークモード背景色 */
       --bg-color: #191919; 
-      --container-bg: #191919; /* 背景と同色化 */
-      --border-color: #2e2e2e;
       --text-color: #e3e3e3;
       --sub-text: #737373;
+      --border-color: #2e2e2e; /* 入力欄の下線用 */
       --focus-color: #eb5757;
       --break-color: #2eaadc;
     }
     body {
       background: var(--bg-color);
-      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
       display: flex;
-      justify-content: center; 
+      justify-content: flex-start; /* 左端に寄せる */
       align-items: center;
       height: 100vh;
       margin: 0;
+      padding-left: 0; /* 左側の余白をゼロに */
       color: var(--text-color);
       overflow: hidden;
     }
@@ -34,11 +34,9 @@
     .timer-container {
       width: 160px;
       text-align: center;
-      background-color: var(--container-bg);
-      /* 境界線を細く、より馴染む色に */
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      padding: 12px 10px;
-      border-radius: 4px; /* Notionのカード風に角を少し鋭角に */
+      background-color: transparent; /* コンテナ背景を透明に */
+      border: none; /* 外枠の線を削除 */
+      padding: 12px 0; /* 左右のパディングをゼロに */
     }
 
     #status {
