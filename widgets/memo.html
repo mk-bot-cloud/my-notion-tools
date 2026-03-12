@@ -7,7 +7,8 @@
         * { box-sizing: border-box !important; }
         
         body { 
-            background-color: #121212 !important; 
+            /* Notionダークモードの背景色に統一 */
+            background-color: #191919 !important; 
             margin: 0; 
             display: flex; 
             flex-direction: column; 
@@ -23,7 +24,6 @@
             justify-content: space-between;
             gap: 4px; 
             margin-bottom: 6px; 
-            /* 横幅を180pxに縮小 */
             width: 180px;
             margin-left: 0;
         }
@@ -35,9 +35,9 @@
         }
 
         .tab { 
-            background: #222 !important; 
-            color: #666 !important; 
-            border: 1px solid #333 !important; 
+            background: #252525 !important; 
+            color: #737373 !important; 
+            border: 1px solid #2e2e2e !important; 
             padding: 2px 5px !important; 
             border-radius: 4px; 
             font-size: 9px !important; 
@@ -46,8 +46,8 @@
         }
 
         .tab.active { 
-            background: #333 !important; 
-            color: #ddd !important; 
+            background: #373737 !important; 
+            color: #ffffff !important; 
             border-color: #444 !important;
         }
 
@@ -57,9 +57,9 @@
         }
 
         .btn-page-ctrl { 
-            background: #222 !important; 
-            color: #666 !important; 
-            border: 1px solid #333 !important; 
+            background: #252525 !important; 
+            color: #737373 !important; 
+            border: 1px solid #2e2e2e !important; 
             border-radius: 4px; 
             width: 20px; 
             height: 20px; 
@@ -71,22 +71,22 @@
         }
         
         .btn-page-ctrl.confirm-delete { 
-            color: #a33c3c !important; 
+            color: #eb5757 !important; 
             border-color: #600 !important; 
-            background: #300 !important;
+            background: #3e1a1a !important;
         }
 
         .memo-container { 
-            /* 横幅を180pxに縮小 */
             width: 180px; 
-            height: 250px; /* 高さも少し抑えめに */
-            background-color: #1a1a1a !important; 
+            height: 250px; 
+            /* コンテナもNotionのカード風の背景色に */
+            background-color: #202020 !important; 
             border-radius: 6px; 
             padding: 8px; 
-            border: 1px solid #2a2a2a; 
+            border: 1px solid #2e2e2e; 
             display: flex; 
             flex-direction: column; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             margin-left: 0;
         }
 
@@ -95,9 +95,9 @@
             height: 100%; 
             background: transparent !important; 
             border: none !important; 
-            color: #ccc !important; 
+            color: #e3e3e3 !important; 
             font-size: 12px !important; 
-            line-height: 1.4 !important; 
+            line-height: 1.5 !important; 
             resize: none; 
             outline: none; 
             font-family: inherit !important; 
@@ -105,7 +105,7 @@
         }
 
         textarea::-webkit-scrollbar { width: 3px; }
-        textarea::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        textarea::-webkit-scrollbar-thumb { background: #373737; border-radius: 10px; }
 
         .controls { 
             display: flex; 
@@ -113,14 +113,14 @@
             align-items: center; 
             margin-top: 6px; 
             padding-top: 4px;
-            border-top: 1px solid #222;
+            border-top: 1px solid #2e2e2e;
         }
         
         .btn-time { 
-            background: #222; 
-            color: #777; 
-            border: 1px solid #333; 
-            padding: 1px 5px; 
+            background: #252525; 
+            color: #737373; 
+            border: 1px solid #2e2e2e; 
+            padding: 2px 5px; 
             border-radius: 3px; 
             font-size: 7px; 
             font-weight: 600;
@@ -129,7 +129,7 @@
 
         .status { 
             font-size: 7px; 
-            color: #444; 
+            color: #555; 
             font-family: monospace;
         }
     </style>
@@ -204,7 +204,7 @@
             deleteConfirmMode = true;
             deleteBtn.classList.add('confirm-delete');
             saveStatus.textContent = 'DEL?';
-            saveStatus.style.color = '#a33c3c';
+            saveStatus.style.color = '#eb5757';
         } else {
             pages.splice(currentIndex, 1);
             currentIndex = Math.max(0, currentIndex - 1);
@@ -219,7 +219,7 @@
         deleteConfirmMode = false;
         deleteBtn.classList.remove('confirm-delete');
         saveStatus.textContent = 'SAVED';
-        saveStatus.style.color = '#444';
+        saveStatus.style.color = '#555';
     }
 
     timeBtn.onclick = () => {
