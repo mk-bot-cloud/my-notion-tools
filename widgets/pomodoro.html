@@ -6,66 +6,63 @@
   <title>Pomodoro Timer</title>
   <style>
     :root {
-      /* Notionダークモードの背景色に統一 */
+      /* Notionの完全なダークモード色 (#191919) */
       --bg-color: #191919; 
-      --container-bg: #202020;
+      --container-bg: #191919; /* 背景と同色化 */
       --border-color: #2e2e2e;
       --text-color: #e3e3e3;
       --sub-text: #737373;
-      /* 配色はメモアプリの削除確認ボタンなどとトーンを合わせる */
       --focus-color: #eb5757;
       --break-color: #2eaadc;
     }
     body {
       background: var(--bg-color);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
       display: flex;
-      justify-content: flex-start; 
+      justify-content: center; 
       align-items: center;
       height: 100vh;
       margin: 0;
-      padding-left: 5px; /* メモアプリと同じ余白に設定 */
       color: var(--text-color);
       overflow: hidden;
     }
     
     body.time-up {
-      background: #3e1a1a !important; /* 終了時の赤もNotionの背景に馴染む暗めの赤に */
+      background: #3e1a1a !important; 
     }
 
     .timer-container {
       width: 160px;
       text-align: center;
       background-color: var(--container-bg);
-      border: 1px solid var(--border-color);
+      /* 境界線を細く、より馴染む色に */
+      border: 1px solid rgba(255, 255, 255, 0.05);
       padding: 12px 10px;
-      border-radius: 6px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      border-radius: 4px; /* Notionのカード風に角を少し鋭角に */
     }
 
     #status {
-      font-size: 0.6rem;
-      font-weight: 700;
-      margin-bottom: 2px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      margin-bottom: 4px;
       color: var(--sub-text);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.03em;
     }
 
     #time {
       font-size: 2.8rem;
-      font-weight: 700;
-      margin-bottom: 10px;
+      font-weight: 600;
+      margin-bottom: 12px;
       font-variant-numeric: tabular-nums;
       line-height: 1;
-      text-align: center;
       color: var(--text-color);
     }
 
     .settings {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
       padding: 0 4px;
     }
 
@@ -74,47 +71,58 @@
       flex-direction: column;
       align-items: center;
       width: 45%;
-      font-size: 0.55rem;
+      font-size: 0.6rem;
       color: var(--sub-text);
     }
 
     .setting-group input {
-      width: 32px;
-      border: none;
+      width: 100%;
+      border: 1px solid transparent;
       border-bottom: 1px solid var(--border-color);
-      padding: 1px 0;
+      padding: 2px 0;
       text-align: center;
       color: var(--text-color);
       background: transparent;
       outline: none;
-      font-size: 0.8rem;
-      font-family: inherit;
+      font-size: 0.85rem;
+      transition: border-bottom 0.2s;
+    }
+    
+    .setting-group input:focus {
+      border-bottom: 1px solid var(--sub-text);
     }
 
     .controls {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
 
     button {
       cursor: pointer;
       border: 1px solid var(--border-color);
-      padding: 7px 0;
+      padding: 6px 0;
       border-radius: 4px;
-      font-weight: 700;
+      font-weight: 500;
       font-size: 0.75rem;
       width: 100%;
-      text-align: center;
-      transition: opacity 0.2s;
+      background: transparent;
+      color: var(--text-color);
+      transition: background 0.2s, border-color 0.2s;
     }
 
-    button:active { opacity: 0.7; }
+    button:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--sub-text);
+    }
 
     #focusBtn { 
       background: var(--focus-color); 
       color: #fff; 
       border: none;
+    }
+    #focusBtn:hover {
+      background: #cf4b4b;
     }
 
     #breakBtn { 
@@ -122,13 +130,16 @@
       color: #fff; 
       border: none;
     }
-
-    #stopBtn { 
-      background: #252525; 
-      color: var(--sub-text); 
+    #breakBtn:hover {
+      background: #2899c6;
     }
 
-    /* 入力欄のスピンボタンを非表示にする */
+    #stopBtn { 
+      background: transparent;
+      color: var(--sub-text); 
+      border: 1px solid var(--border-color);
+    }
+
     input::-webkit-outer-spin-button,
     input::-webkit-inner-spin-button {
       -webkit-appearance: none;
@@ -172,7 +183,6 @@
 
     function notify() {
       body.classList.add('time-up');
-      
       let toggle = true;
       alertInterval = setInterval(() => {
         document.title = toggle ? "【！】終了しました" : "　　　　　　　　";
