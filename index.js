@@ -33,7 +33,6 @@ async function main() {
   } catch (e) { console.error("メイン実行エラー:", e.message); }
 }
 
-// --- 学術大会の日付整形用ヘルパー関数 ---
 async function formatDateWithAI(dateText) {
   try {
     const prompt = `以下の学会の日程テキストを解析し、Notionの日付プロパティ用JSONを生成してください。
@@ -92,16 +91,13 @@ async function fetchAllConferences() {
   } catch (e) { console.error("学術大会エラー:", e.message); }
 }
 
-// 変更箇所：インプットに依存せず、プロンプトで「問い」を直接コントロールする関数
 async function generateAutonomousQuestions() {
   try {
     const prompt = `あなたは高度な専門性を持つリハビリテーション領域の研究者（痛み、物理療法、訪問リハビリテーション、ウィメンズヘルス、教育）であり、理学療法士養成校の教員です。
 最新の知見や臨床的課題、または教育的視点から、今日考えるべき「本質的な問い」を3つ生成してください。
 
 【制約事項】
-・既存のデータの抄録などは不要です。あなたの知識から、私の専門領域に根ざした鋭い問いを作成してください。
-・「〜の視点から」等の前置きは一切不要。
-・最後を必ず「？」で終わらせる。
+・前置きは不要。最後を必ず「？」で終わらせる。
 ・端的かつ深い一文。
 
 【出力形式】
@@ -126,7 +122,8 @@ JSON形式: { "actions": [ { "q": "（問いの文章のみ）" } ] }`;
           parent: { database_id: DB_ACTION_ID },
           properties: { 
             '問い': { title: [{ text: { content: item.q } }] },
-            'GTD': { select: { name: "Inbox" } }
+            // 修正箇所：select ではなく status を使う
+            'GTD': { status: { name: "Inbox" } }
           }
         });
         console.log(`✅ 問いを登録: ${item.q}`);
@@ -149,7 +146,7 @@ async function fillPubmedDataWithAI() {
       const abstract = $('.abstract-content').text().trim().substring(0, 1500) || "Abstractなし";
       const journal = $('.journal-actions-trigger').first().text().trim() || "不明";
       await new Promise(r => setTimeout(r, 20000));
-      const prompt = `あなたは医学論文の専門家です。抄録を読み、JSONで返せ。1. translatedTitle, 2. journal, 3. summary: である調で180〜200字。\n\nTitle: ${title}\nAbstract: ${abstract}`;
+      const prompt = `抄録を読み、JSONで返せ。1. translatedTitle, 2. journal, 3. summary: である調で180〜200字。\n\nTitle: ${title}\nAbstract: ${abstract}`;
       const aiRes = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
         model: "llama-3.1-8b-instant",
         messages: [{ role: "user", content: prompt }],
