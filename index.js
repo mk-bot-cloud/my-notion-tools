@@ -9,11 +9,17 @@ const GROQ_KEY = process.env.GROQ_API_KEY;
 const DB_ACADEMIC_ID = process.env.DB_ACADEMIC_EVENT_ID; 
 const DB_ACTION_ID = process.env.DB_ACTION_ID; 
 
-const parser = new Parser();
+// 404対策: RSSパーサー自体にブラウザのふりをするヘッダーを設定
+const parser = new Parser({
+  headers: {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
+    'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+  },
+});
 
 async function main() {
   try {
-    console.log("=== 1. ニュース・技術情報の収集 ===");
+    console.log("=== 1. ニュース・技術情報の収集 (Zenn統合・画像強化版) ===");
     await fetchNewsDaily();
     console.log("\n=== 2. 自動お掃除 (作成から7日経過) ===");
     await autoCleanupTrash();
@@ -33,9 +39,7 @@ async function fetchNewsDaily() {
     { name: "ICT教育ニュース", url: "https://ict-enews.net/feed/" },
     { name: "ITmedia AI+", url: "https://rss.itmedia.co.jp/rss/2.0/aiplus.xml" },
     { name: "テクノエッジ", url: "https://www.techno-edge.net/rss20/index.rdf" },
-    { name: "Zenn Tech", url: "https://zenn.dev/feed?type=tech" },
-    { name: "Zenn Ideas", url: "https://zenn.dev/feed?type=idea" },
-    { name: "Zenn AI", url: "https://zenn.dev/topics/ai/feed" }
+    { name: "Zenn", url: "https://zenn.dev/feed" } // 統合版URL
   ];
   
   const keywords = ["AI", "Notion", "Gemini", "効率化", "自動化", "IT", "ChatGPT", "生成AI", "理学療法", "GitHub", "Python"];
@@ -58,22 +62,34 @@ async function fetchNewsDaily() {
           }
         }
       }
-    } catch (e) { console.error(`${source.name}収集エラー:`, e.message); }
+    } catch (e) { 
+      console.error(`❌ ${source.name}収集エラー: ${e.message}`); 
+    }
   }
 }
 
 async function getImageUrl(item) {
+  // RSSに画像URLが入っている場合はそれを使う
   if (item.enclosure && item.enclosure.url) return item.enclosure.url;
+  
   try {
+    // 404対策を施したヘッダーで記事ページを取得
     const res = await axios.get(item.link, { 
-      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36" }, 
-      timeout: 7000 
+      headers: { 
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+      }, 
+      timeout: 8000 
     });
     const $ = cheerio.load(res.data);
+    
+    // OGP画像を抽出
     return $('meta[property="og:image"]').attr('content') || 
-           $('meta[name="twitter:image"]').attr('content') ||
-           $('meta[name="image"]').attr('content') || null;
-  } catch (e) { return null; }
+           $('meta[name="twitter:image"]').attr('content') || 
+           null;
+  } catch (e) { 
+    return null; 
+  }
 }
 
 async function autoCleanupTrash() {
@@ -113,7 +129,7 @@ async function createNotionPage(title, link, imageUrl, sourceName) {
 
 async function formatDateWithAI(dateText) {
   try {
-    const prompt = `学会日程を解析しJSON生成。形式YYYY-MM-DD。開始日のみならendはnull。期間ならend付与。\n【日程】: ${dateText}\n【出力形式】: { "start": "YYYY-MM-DD", "end": "YYYY-MM-DD" or null }`;
+    const prompt = `学会日程を解析しJSON生成。形式YYYY-MM-DD。\n【日程】: ${dateText}\n【出力形式】: { "start": "YYYY-MM-DD", "end": "YYYY-MM-DD" or null }`;
     const aiRes = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
       model: "llama-3.1-8b-instant",
       messages: [{ role: "user", content: prompt }],
@@ -158,7 +174,7 @@ async function fetchAllConferences() {
 
 async function generateAutonomousQuestions() {
   try {
-    const prompt = `理学療法士教員の視点で「本質的な問い」を3つJSONで生成せよ。形式: { "actions": [ { "q": "文章" } ] }`;
+    const prompt = `理学療法士教員の視点で「本質的な問い」を3つJSON生成。形式: { "actions": [ { "q": "文章" } ] }`;
     const aiRes = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
       model: "llama-3.1-8b-instant",
       messages: [{ role: "user", content: prompt }],
@@ -193,7 +209,7 @@ async function fillPubmedDataWithAI() {
       await new Promise(r => setTimeout(r, 20000));
       const aiRes = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
         model: "llama-3.1-8b-instant",
-        messages: [{ role: "user", content: `翻訳・要約せよ。JSON形式で返せ。{translatedTitle, summary}\nTitle: ${title}\nAbstract: ${abstract}` }],
+        messages: [{ role: "user", content: `翻訳・要約せよ。JSON形式。{translatedTitle, summary}\nTitle: ${title}\nAbstract: ${abstract}` }],
         response_format: { type: "json_object" }
       }, { headers: { "Authorization": `Bearer ${GROQ_KEY.trim()}`, "Content-Type": "application/json" } });
       const aiData = JSON.parse(aiRes.data.choices[0].message.content);
