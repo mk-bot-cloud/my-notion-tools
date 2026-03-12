@@ -16,20 +16,24 @@
       background: var(--bg-color);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
       display: flex;
-      justify-content: center;
+      /* 中央揃えから左揃えに変更 */
+      justify-content: flex-start; 
       align-items: center;
       height: 100vh;
       margin: 0;
+      /* 左側に少し余白を追加 */
+      padding-left: 20px;
       color: var(--text-color);
       overflow: hidden;
     }
-    /* 終了時に画面全体を赤くするクラス */
+    
     body.time-up {
       background: #b91c1c !important;
     }
 
     .timer-container {
-      text-align: center;
+      /* テキストも左寄せに */
+      text-align: left;
       width: 190px;
     }
     #status {
@@ -38,12 +42,15 @@
       margin-bottom: 2px;
       color: var(--sub-text);
       text-transform: uppercase;
+      /* ステータスラベルの微調整 */
+      padding-left: 2px;
     }
     #time {
       font-size: 3.5rem;
       font-weight: 700;
       margin-bottom: 15px;
       font-variant-numeric: tabular-nums;
+      line-height: 1;
     }
     .settings {
       display: flex;
@@ -53,7 +60,7 @@
     .setting-group {
       display: flex;
       flex-direction: column;
-      align-items: center;
+      align-items: flex-start; /* 入力欄も左寄せ */
       width: 48%;
       font-size: 0.6rem;
       color: var(--sub-text);
@@ -62,8 +69,8 @@
       width: 35px;
       border: none;
       border-bottom: 1px solid #333;
-      padding: 2px;
-      text-align: center;
+      padding: 2px 0;
+      text-align: left; /* 数字を左寄せ */
       color: var(--text-color);
       background: transparent;
       outline: none;
@@ -81,6 +88,7 @@
       font-weight: 700;
       font-size: 0.8rem;
       width: 100%;
+      text-align: center;
     }
     #focusBtn { background: var(--focus-color); color: white; }
     #breakBtn { background: var(--break-color); color: white; }
@@ -122,18 +130,13 @@
     }
 
     function notify() {
-      // 1. 画面を真っ赤にする
       body.classList.add('time-up');
-      
-      // 2. タブの名前を激しく点滅させる（他のタブを見ていても気づくように）
       let toggle = true;
       alertInterval = setInterval(() => {
         document.title = toggle ? "！！！時間です！！！" : "　　　　　　　　　";
         toggle = !toggle;
       }, 500);
 
-      // 3. ブラウザ標準のアラートを出す
-      // アラートが出ると、ブラウザのタブが「ピコピコ」光ります
       setTimeout(() => {
         alert("タイマーが終了しました！");
         stopAlert();
@@ -142,13 +145,13 @@
 
     function stopAlert() {
       body.classList.remove('time-up');
-      clearInterval(alertInterval);
+      if (alertInterval) clearInterval(alertInterval);
       document.title = "Pomodoro Timer";
     }
 
     function startTimer(min, mode, color) {
       stopAlert();
-      clearInterval(timerId);
+      if (timerId) clearInterval(timerId);
       timeLeft = min * 60;
       document.getElementById('status').textContent = mode;
       document.getElementById('status').style.color = color;
@@ -166,9 +169,10 @@
     document.getElementById('focusBtn').onclick = () => startTimer(document.getElementById('focusInput').value, "Focus", "var(--focus-color)");
     document.getElementById('breakBtn').onclick = () => startTimer(document.getElementById('breakInput').value, "Break", "var(--break-color)");
     document.getElementById('stopBtn').onclick = () => {
-      clearInterval(timerId);
+      if (timerId) clearInterval(timerId);
       stopAlert();
       document.getElementById('status').textContent = "Ready";
+      document.getElementById('status').style.color = "var(--sub-text)";
       timeLeft = document.getElementById('focusInput').value * 60;
       updateDisplay();
     };
