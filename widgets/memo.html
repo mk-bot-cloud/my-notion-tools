@@ -7,14 +7,13 @@
         * { box-sizing: border-box !important; }
         
         body { 
-            background-color: #191919 !important; 
+            background-color: #121212 !important; 
             margin: 0; 
             display: flex; 
             flex-direction: column; 
-            align-items: flex-start; /* 左揃え */
+            align-items: flex-start; 
             min-height: 100vh; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
-            /* 左余白を極限まで詰める(5px) */
             padding: 10px 5px; 
         }
 
@@ -23,9 +22,9 @@
             align-items: center; 
             justify-content: space-between;
             gap: 4px; 
-            margin-bottom: 8px; 
-            width: 240px;
-            /* Wrapper自体の左マージンをゼロに */
+            margin-bottom: 6px; 
+            /* 横幅を180pxに縮小 */
+            width: 180px;
             margin-left: 0;
         }
 
@@ -36,58 +35,58 @@
         }
 
         .tab { 
-            background: #2a2a2a !important; 
-            color: #777 !important; 
-            border: 1px solid #3a3a3a !important; 
-            padding: 2px 6px !important; 
+            background: #222 !important; 
+            color: #666 !important; 
+            border: 1px solid #333 !important; 
+            padding: 2px 5px !important; 
             border-radius: 4px; 
-            font-size: 10px !important; 
+            font-size: 9px !important; 
             font-weight: bold; 
             cursor: pointer;
         }
 
         .tab.active { 
-            background: #444 !important; 
-            color: #fff !important; 
-            border-color: #555 !important;
+            background: #333 !important; 
+            color: #ddd !important; 
+            border-color: #444 !important;
         }
 
         .action-group {
             display: flex;
-            gap: 3px;
+            gap: 2px;
         }
 
         .btn-page-ctrl { 
-            background: #2a2a2a !important; 
-            color: #888 !important; 
+            background: #222 !important; 
+            color: #666 !important; 
             border: 1px solid #333 !important; 
             border-radius: 4px; 
-            width: 24px; 
-            height: 24px; 
+            width: 20px; 
+            height: 20px; 
             cursor: pointer; 
-            font-size: 14px !important;
+            font-size: 12px !important;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
         .btn-page-ctrl.confirm-delete { 
-            color: #ff4444 !important; 
-            border-color: #800 !important; 
-            background: #400 !important;
+            color: #a33c3c !important; 
+            border-color: #600 !important; 
+            background: #300 !important;
         }
 
         .memo-container { 
-            width: 240px; 
-            height: 280px;
-            background-color: #222 !important; 
-            border-radius: 8px; 
-            padding: 10px; 
-            border: 1px solid #333; 
+            /* 横幅を180pxに縮小 */
+            width: 180px; 
+            height: 250px; /* 高さも少し抑えめに */
+            background-color: #1a1a1a !important; 
+            border-radius: 6px; 
+            padding: 8px; 
+            border: 1px solid #2a2a2a; 
             display: flex; 
             flex-direction: column; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            /* コンテナ自体も左に寄せる */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             margin-left: 0;
         }
 
@@ -96,8 +95,8 @@
             height: 100%; 
             background: transparent !important; 
             border: none !important; 
-            color: #e0e0e0 !important; 
-            font-size: 13px !important; 
+            color: #ccc !important; 
+            font-size: 12px !important; 
             line-height: 1.4 !important; 
             resize: none; 
             outline: none; 
@@ -113,24 +112,24 @@
             justify-content: space-between; 
             align-items: center; 
             margin-top: 6px; 
-            padding-top: 6px;
-            border-top: 1px solid #2d2d2d;
+            padding-top: 4px;
+            border-top: 1px solid #222;
         }
         
         .btn-time { 
-            background: #2a2a2a; 
-            color: #999; 
-            border: 1px solid #3a3a3a; 
-            padding: 2px 6px; 
-            border-radius: 4px; 
-            font-size: 8px; 
+            background: #222; 
+            color: #777; 
+            border: 1px solid #333; 
+            padding: 1px 5px; 
+            border-radius: 3px; 
+            font-size: 7px; 
             font-weight: 600;
             cursor: pointer; 
         }
 
         .status { 
-            font-size: 8px; 
-            color: #555; 
+            font-size: 7px; 
+            color: #444; 
             font-family: monospace;
         }
     </style>
@@ -205,7 +204,7 @@
             deleteConfirmMode = true;
             deleteBtn.classList.add('confirm-delete');
             saveStatus.textContent = 'DEL?';
-            saveStatus.style.color = '#ff4444';
+            saveStatus.style.color = '#a33c3c';
         } else {
             pages.splice(currentIndex, 1);
             currentIndex = Math.max(0, currentIndex - 1);
@@ -220,7 +219,7 @@
         deleteConfirmMode = false;
         deleteBtn.classList.remove('confirm-delete');
         saveStatus.textContent = 'SAVED';
-        saveStatus.style.color = '#555';
+        saveStatus.style.color = '#444';
     }
 
     timeBtn.onclick = () => {
