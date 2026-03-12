@@ -13,7 +13,7 @@ const parser = new Parser();
 
 async function main() {
   try {
-    console.log("=== 1. ニュース収集 ===");
+    console.log("=== 1. ニュース・技術情報の収集 ===");
     await fetchNewsDaily();
     console.log("\n=== 2. 自動お掃除 ===");
     await autoCleanupTrash();
@@ -123,7 +123,6 @@ JSON形式: { "actions": [ { "q": "（問いの文章のみ）" } ] }`;
           parent: { database_id: DB_ACTION_ID },
           properties: { 
             '問い': { title: [{ text: { content: item.q } }] },
-            // 修正箇所：select ではなく status を使う
             'GTD': { status: { name: "Inbox" } }
           }
         });
@@ -171,19 +170,24 @@ async function fetchNewsDaily() {
   const sources = [
     { name: "ICT教育ニュース", url: "https://ict-enews.net/feed/" },
     { name: "ITmedia AI+", url: "https://rss.itmedia.co.jp/rss/2.0/aiplus.xml" },
-    { name: "テクノエッジ", url: "https://www.techno-edge.net/rss20/index.rdf" }
+    { name: "テクノエッジ", url: "https://www.techno-edge.net/rss20/index.rdf" },
+    // Zennを追加
+    { name: "Zennトレンド", url: "https://zenn.dev/feed" },
+    { name: "Zenn AI", url: "https://zenn.dev/topics/ai/feed" }
   ];
-  const keywords = ["AI", "Notion", "Gemini", "効率化", "自動化", "IT", "ChatGPT", "生成AI", "理学療法"];
+  const keywords = ["AI", "Notion", "Gemini", "効率化", "自動化", "IT", "ChatGPT", "生成AI", "理学療法", "GitHub"];
   for (const source of sources) {
     try {
       const feed = await parser.parseURL(source.url);
       for (const item of feed.items.slice(0, 5)) {
+        // Zennなどはタイトルに余計な記号が入ることがあるので整形
         const title = item.title.replace(/[\[【].*?[\]】]/g, '').trim();
         if (keywords.some(kw => title.toUpperCase().includes(kw.toUpperCase()))) {
           const exists = await notion.databases.query({ database_id: DB_INPUT_ID, filter: { property: "名前", title: { equals: title } } });
           if (exists.results.length === 0) {
             const imageUrl = await getImageUrl(item);
             await createNotionPage(title, item.link, imageUrl, source.name);
+            console.log(`✅ 記事を登録: ${title} (${source.name})`);
           }
         }
       }
