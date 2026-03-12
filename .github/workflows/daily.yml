@@ -5,6 +5,10 @@ on:
     - cron: '30 19 * * *' # 毎日日本時間 04:30 (UTC 19:30) に実行
   workflow_dispatch:      # 手動実行用
 
+# ここに環境変数を追加して警告を解消します
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
