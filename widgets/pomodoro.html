@@ -6,13 +6,15 @@
   <title>Pomodoro Timer</title>
   <style>
     :root {
-      /* 背景色をより暗く(191919 -> 121212) */
-      --bg-color: #121212; 
-      --text-color: #e0e0e0;
-      --sub-text: #666666;
-      /* ボタンの明度を落として落ち着かせる */
-      --focus-color: #a33c3c;
-      --break-color: #267a9c;
+      /* Notionダークモードの背景色に統一 */
+      --bg-color: #191919; 
+      --container-bg: #202020;
+      --border-color: #2e2e2e;
+      --text-color: #e3e3e3;
+      --sub-text: #737373;
+      /* 配色はメモアプリの削除確認ボタンなどとトーンを合わせる */
+      --focus-color: #eb5757;
+      --break-color: #2eaadc;
     }
     body {
       background: var(--bg-color);
@@ -22,20 +24,25 @@
       align-items: center;
       height: 100vh;
       margin: 0;
-      padding-left: 15px; /* 余白を少し削る */
+      padding-left: 5px; /* メモアプリと同じ余白に設定 */
       color: var(--text-color);
       overflow: hidden;
     }
     
     body.time-up {
-      background: #7f1d1d !important; /* 終了時の赤も少し暗めに */
+      background: #3e1a1a !important; /* 終了時の赤もNotionの背景に馴染む暗めの赤に */
     }
 
     .timer-container {
-      /* 全体サイズを少し小さく (190px -> 160px) */
       width: 160px;
-      text-align: center; /* 中央寄せ */
+      text-align: center;
+      background-color: var(--container-bg);
+      border: 1px solid var(--border-color);
+      padding: 12px 10px;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
+
     #status {
       font-size: 0.6rem;
       font-weight: 700;
@@ -44,59 +51,89 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
+
     #time {
-      /* フォントサイズを少し小さく (3.5rem -> 3.0rem) */
-      font-size: 3.0rem;
+      font-size: 2.8rem;
       font-weight: 700;
       margin-bottom: 10px;
       font-variant-numeric: tabular-nums;
       line-height: 1;
       text-align: center;
+      color: var(--text-color);
     }
+
     .settings {
       display: flex;
       justify-content: space-between;
       margin-bottom: 12px;
+      padding: 0 4px;
     }
+
     .setting-group {
       display: flex;
       flex-direction: column;
-      align-items: center; /* 設定項目も中央寄せ */
+      align-items: center;
       width: 45%;
       font-size: 0.55rem;
       color: var(--sub-text);
     }
+
     .setting-group input {
-      width: 30px;
+      width: 32px;
       border: none;
-      border-bottom: 1px solid #333;
+      border-bottom: 1px solid var(--border-color);
       padding: 1px 0;
-      text-align: center; /* 数字も中央 */
+      text-align: center;
       color: var(--text-color);
       background: transparent;
       outline: none;
-      font-size: 0.75rem;
+      font-size: 0.8rem;
+      font-family: inherit;
     }
+
     .controls {
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
+
     button {
       cursor: pointer;
-      border: none;
-      padding: 8px 0;
-      border-radius: 5px;
+      border: 1px solid var(--border-color);
+      padding: 7px 0;
+      border-radius: 4px;
       font-weight: 700;
       font-size: 0.75rem;
       width: 100%;
       text-align: center;
       transition: opacity 0.2s;
     }
+
     button:active { opacity: 0.7; }
-    #focusBtn { background: var(--focus-color); color: rgba(255,255,255,0.9); }
-    #breakBtn { background: var(--break-color); color: rgba(255,255,255,0.9); }
-    #stopBtn { background: #222222; color: #555555; }
+
+    #focusBtn { 
+      background: var(--focus-color); 
+      color: #fff; 
+      border: none;
+    }
+
+    #breakBtn { 
+      background: var(--break-color); 
+      color: #fff; 
+      border: none;
+    }
+
+    #stopBtn { 
+      background: #252525; 
+      color: var(--sub-text); 
+    }
+
+    /* 入力欄のスピンボタンを非表示にする */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
   </style>
 </head>
 <body id="bodyTag">
@@ -136,14 +173,12 @@
     function notify() {
       body.classList.add('time-up');
       
-      // タブタイトルの点滅（OS通知オフでも視覚的に気づけるように）
       let toggle = true;
       alertInterval = setInterval(() => {
         document.title = toggle ? "【！】終了しました" : "　　　　　　　　";
         toggle = !toggle;
       }, 500);
 
-      // 強制的に前面に出るアラート（Windows設定を無視して通知可能）
       setTimeout(() => {
         alert("タイマーが終了しました！");
         stopAlert();
@@ -173,8 +208,8 @@
       }, 1000);
     }
 
-    document.getElementById('focusBtn').onclick = () => startTimer(document.getElementById('focusInput').value, "Focus", "#eb5757");
-    document.getElementById('breakBtn').onclick = () => startTimer(document.getElementById('breakInput').value, "Break", "#2eaadc");
+    document.getElementById('focusBtn').onclick = () => startTimer(document.getElementById('focusInput').value, "Focus", "var(--focus-color)");
+    document.getElementById('breakBtn').onclick = () => startTimer(document.getElementById('breakInput').value, "Break", "var(--break-color)");
     document.getElementById('stopBtn').onclick = () => {
       if (timerId) clearInterval(timerId);
       stopAlert();
