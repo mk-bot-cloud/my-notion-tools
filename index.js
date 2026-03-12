@@ -171,7 +171,6 @@ async function fetchNewsDaily() {
     { name: "ICT教育ニュース", url: "https://ict-enews.net/feed/" },
     { name: "ITmedia AI+", url: "https://rss.itmedia.co.jp/rss/2.0/aiplus.xml" },
     { name: "テクノエッジ", url: "https://www.techno-edge.net/rss20/index.rdf" },
-    // Zennを追加
     { name: "Zennトレンド", url: "https://zenn.dev/feed" },
     { name: "Zenn AI", url: "https://zenn.dev/topics/ai/feed" }
   ];
@@ -180,7 +179,6 @@ async function fetchNewsDaily() {
     try {
       const feed = await parser.parseURL(source.url);
       for (const item of feed.items.slice(0, 5)) {
-        // Zennなどはタイトルに余計な記号が入ることがあるので整形
         const title = item.title.replace(/[\[【].*?[\]】]/g, '').trim();
         if (keywords.some(kw => title.toUpperCase().includes(kw.toUpperCase()))) {
           const exists = await notion.databases.query({ database_id: DB_INPUT_ID, filter: { property: "名前", title: { equals: title } } });
@@ -229,8 +227,9 @@ async function autoCleanupTrash() {
             checkbox: { equals: true }
           },
           {
-            timestamp: "last_edited_time",
-            last_edited_time: {
+
+            property: '作成日時',
+            date: {
               on_or_before: thresholdDate.toISOString()
             }
           }
@@ -243,7 +242,7 @@ async function autoCleanupTrash() {
         page_id: page.id,
         archived: true
       });
-      console.log(`🗑️ 削除確定(チェック後1週間経過): ${page.id}`);
+      console.log(`🗑️ 削除確定(作成から1週間経過): ${page.id}`);
     }
   } catch (e) {
     console.error("お掃除エラー:", e.message);
