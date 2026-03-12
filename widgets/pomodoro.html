@@ -6,11 +6,10 @@
   <title>Pomodoro Timer</title>
   <style>
     :root {
-      /* Notionのダークモード背景色 */
       --bg-color: #191919; 
       --text-color: #e3e3e3;
       --sub-text: #737373;
-      --border-color: #2e2e2e; /* 入力欄の下線用 */
+      --border-color: #2e2e2e;
       --focus-color: #eb5757;
       --break-color: #2eaadc;
     }
@@ -18,11 +17,11 @@
       background: var(--bg-color);
       font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
       display: flex;
-      justify-content: flex-start; /* 左端に寄せる */
+      justify-content: flex-start;
       align-items: center;
       height: 100vh;
       margin: 0;
-      padding-left: 0; /* 左側の余白をゼロに */
+      padding-left: 20px; 
       color: var(--text-color);
       overflow: hidden;
     }
@@ -31,27 +30,28 @@
       background: #3e1a1a !important; 
     }
 
+    /* 横幅を 160px -> 200px に変更 */
     .timer-container {
-      width: 160px;
+      width: 200px; 
       text-align: center;
-      background-color: transparent; /* コンテナ背景を透明に */
-      border: none; /* 外枠の線を削除 */
-      padding: 12px 0; /* 左右のパディングをゼロに */
+      background-color: transparent;
+      border: none;
+      padding: 16px 0;
     }
 
     #status {
-      font-size: 0.65rem;
+      font-size: 0.7rem;
       font-weight: 600;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
       color: var(--sub-text);
       text-transform: uppercase;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.05em;
     }
 
     #time {
-      font-size: 2.8rem;
+      font-size: 3.2rem; 
       font-weight: 600;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
       font-variant-numeric: tabular-nums;
       line-height: 1;
       color: var(--text-color);
@@ -59,17 +59,17 @@
 
     .settings {
       display: flex;
-      justify-content: space-between;
-      margin-bottom: 16px;
-      padding: 0 4px;
+      justify-content: space-around; 
+      margin-bottom: 20px;
+      padding: 0 8px;
     }
 
     .setting-group {
       display: flex;
       flex-direction: column;
       align-items: center;
-      width: 45%;
-      font-size: 0.6rem;
+      width: 40%;
+      font-size: 0.65rem;
       color: var(--sub-text);
     }
 
@@ -77,12 +77,12 @@
       width: 100%;
       border: 1px solid transparent;
       border-bottom: 1px solid var(--border-color);
-      padding: 2px 0;
+      padding: 4px 0;
       text-align: center;
       color: var(--text-color);
       background: transparent;
       outline: none;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       transition: border-bottom 0.2s;
     }
     
@@ -93,16 +93,17 @@
     .controls {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
+      padding: 0 4px;
     }
 
     button {
       cursor: pointer;
       border: 1px solid var(--border-color);
-      padding: 6px 0;
-      border-radius: 4px;
+      padding: 8px 0;
+      border-radius: 6px;
       font-weight: 500;
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       width: 100%;
       background: transparent;
       color: var(--text-color);
@@ -114,29 +115,11 @@
       border-color: var(--sub-text);
     }
 
-    #focusBtn { 
-      background: var(--focus-color); 
-      color: #fff; 
-      border: none;
-    }
-    #focusBtn:hover {
-      background: #cf4b4b;
-    }
-
-    #breakBtn { 
-      background: var(--break-color); 
-      color: #fff; 
-      border: none;
-    }
-    #breakBtn:hover {
-      background: #2899c6;
-    }
-
-    #stopBtn { 
-      background: transparent;
-      color: var(--sub-text); 
-      border: 1px solid var(--border-color);
-    }
+    #focusBtn { background: var(--focus-color); color: #fff; border: none; }
+    #focusBtn:hover { background: #cf4b4b; }
+    #breakBtn { background: var(--break-color); color: #fff; border: none; }
+    #breakBtn:hover { background: #2899c6; }
+    #stopBtn { color: var(--sub-text); }
 
     input::-webkit-outer-spin-button,
     input::-webkit-inner-spin-button {
@@ -183,12 +166,12 @@
       body.classList.add('time-up');
       let toggle = true;
       alertInterval = setInterval(() => {
-        document.title = toggle ? "【！】終了しました" : "　　　　　　　　";
+        document.title = toggle ? "【！】終了" : "Pomodoro";
         toggle = !toggle;
       }, 500);
 
       setTimeout(() => {
-        alert("タイマーが終了しました！");
+        alert("タイマー終了！");
         stopAlert();
       }, 50);
     }
