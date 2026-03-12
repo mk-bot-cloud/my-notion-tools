@@ -15,42 +15,112 @@ async function main() {
   try {
     console.log("=== 1. ニュース・技術情報の収集 ===");
     await fetchNewsDaily();
-    console.log("\n=== 2. 自動お掃除 ===");
+    console.log("\n=== 2. 自動お掃除 (作成から7日経過) ===");
     await autoCleanupTrash();
     console.log("\n=== 3. 学術大会情報 ===");
     if (DB_ACADEMIC_ID) await fetchAllConferences();
     console.log("\n=== 4. PubMed要約 ===");
     await fillPubmedDataWithAI();
-
     console.log("\n=== 5. 専門的な『問い』を自律生成 ===");
-    if (DB_ACTION_ID) {
-      await generateAutonomousQuestions();
-    } else {
-      console.log("⚠️ DB_ACTION_IDが設定されていません。");
-    }
+    if (DB_ACTION_ID) await generateAutonomousQuestions();
 
     console.log("\n✨ すべての処理が正常に完了しました");
   } catch (e) { console.error("メイン実行エラー:", e.message); }
 }
 
+async function fetchNewsDaily() {
+  const sources = [
+    { name: "ICT教育ニュース", url: "https://ict-enews.net/feed/" },
+    { name: "ITmedia AI+", url: "https://rss.itmedia.co.jp/rss/2.0/aiplus.xml" },
+    { name: "テクノエッジ", url: "https://www.techno-edge.net/rss20/index.rdf" },
+    { name: "Zenn Tech", url: "https://zenn.dev/feed?type=tech" },
+    { name: "Zenn Ideas", url: "https://zenn.dev/feed?type=idea" },
+    { name: "Zenn AI", url: "https://zenn.dev/topics/ai/feed" }
+  ];
+  
+  const keywords = ["AI", "Notion", "Gemini", "効率化", "自動化", "IT", "ChatGPT", "生成AI", "理学療法", "GitHub", "Python"];
+  
+  for (const source of sources) {
+    try {
+      const feed = await parser.parseURL(source.url);
+      for (const item of feed.items.slice(0, 5)) {
+        const title = item.title.replace(/[\[【].*?[\]】]/g, '').trim();
+        if (keywords.some(kw => title.toUpperCase().includes(kw.toUpperCase()))) {
+          const exists = await notion.databases.query({ 
+            database_id: DB_INPUT_ID, 
+            filter: { property: "名前", title: { equals: title } } 
+          });
+          
+          if (exists.results.length === 0) {
+            const imageUrl = await getImageUrl(item);
+            await createNotionPage(title, item.link, imageUrl, source.name);
+            console.log(`✅ 登録: ${title} (${source.name})`);
+          }
+        }
+      }
+    } catch (e) { console.error(`${source.name}収集エラー:`, e.message); }
+  }
+}
+
+async function getImageUrl(item) {
+  if (item.enclosure && item.enclosure.url) return item.enclosure.url;
+  try {
+    const res = await axios.get(item.link, { 
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36" }, 
+      timeout: 7000 
+    });
+    const $ = cheerio.load(res.data);
+    return $('meta[property="og:image"]').attr('content') || 
+           $('meta[name="twitter:image"]').attr('content') ||
+           $('meta[name="image"]').attr('content') || null;
+  } catch (e) { return null; }
+}
+
+async function autoCleanupTrash() {
+  const thresholdDate = new Date();
+  thresholdDate.setDate(thresholdDate.getDate() - 7);
+  try {
+    const res = await notion.databases.query({
+      database_id: DB_INPUT_ID,
+      filter: {
+        and: [
+          { property: '削除チェック', checkbox: { equals: true } },
+          { property: '作成日時', date: { on_or_before: thresholdDate.toISOString() } }
+        ]
+      }
+    });
+    for (const page of res.results) {
+      await notion.pages.update({ page_id: page.id, archived: true });
+      console.log(`🗑️ アーカイブ完了: ${page.id}`);
+    }
+  } catch (e) { console.error("お掃除エラー:", e.message); }
+}
+
+async function createNotionPage(title, link, imageUrl, sourceName) {
+  const children = imageUrl ? [{ object: "block", type: "image", image: { type: "external", external: { url: imageUrl } } }] : [];
+  children.push({ object: "block", type: "bookmark", bookmark: { url: link } });
+  await notion.pages.create({
+    parent: { database_id: DB_INPUT_ID },
+    cover: imageUrl ? { type: "external", external: { url: imageUrl } } : null,
+    properties: { 
+      '名前': { title: [{ text: { content: title } }] }, 
+      'URL': { url: link }, 
+      '情報源': { select: { name: sourceName } } 
+    },
+    children: children
+  });
+}
+
 async function formatDateWithAI(dateText) {
   try {
-    const prompt = `以下の学会の日程テキストを解析し、Notionの日付プロパティ用JSONを生成してください。
-開始日のみの場合はendをnullに、期間がある場合はendも含めてください。形式はYYYY-MM-DDです。
-【日程】: ${dateText}
-【出力形式】: { "start": "YYYY-MM-DD", "end": "YYYY-MM-DD" or null }`;
-
+    const prompt = `学会日程を解析しJSON生成。形式YYYY-MM-DD。開始日のみならendはnull。期間ならend付与。\n【日程】: ${dateText}\n【出力形式】: { "start": "YYYY-MM-DD", "end": "YYYY-MM-DD" or null }`;
     const aiRes = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
       model: "llama-3.1-8b-instant",
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" }
     }, { headers: { "Authorization": `Bearer ${GROQ_KEY.trim()}`, "Content-Type": "application/json" } });
-
     return JSON.parse(aiRes.data.choices[0].message.content);
-  } catch (e) {
-    console.error("日付整形エラー:", e.message);
-    return null;
-  }
+  } catch (e) { return null; }
 }
 
 async function fetchAllConferences() {
@@ -61,28 +131,23 @@ async function fetchAllConferences() {
     for (const row of rows) {
       const cells = $(row).find('td');
       if (cells.length >= 5) {
-        const conferenceCell = $(cells[1]);
-        const conferenceName = conferenceCell.text().trim();
-        const link = conferenceCell.find('a').attr('href');
-        const dateText = $(cells[2]).text().trim();
-        const venueText = $(cells[3]).text().trim();
-        const remarksText = $(cells[4]).text().trim();
+        const confName = $(cells[1]).text().trim();
+        const link = $(cells[1]).find('a').attr('href');
         if (link && link.startsWith('http')) {
           const exists = await notion.databases.query({ database_id: DB_ACADEMIC_ID, filter: { property: "URL", url: { equals: link } } });
           if (exists.results.length === 0) {
-            const dateObj = await formatDateWithAI(dateText);
-            
+            const dateObj = await formatDateWithAI($(cells[2]).text().trim());
             await notion.pages.create({
               parent: { database_id: DB_ACADEMIC_ID },
               properties: {
-                '大会名称': { title: [{ text: { content: conferenceName } }] },
+                '大会名称': { title: [{ text: { content: confName } }] },
                 'URL': { url: link },
                 '開催年月日': { date: dateObj },
-                '会場': { rich_text: [{ text: { content: venueText } }] },
-                '備考': { rich_text: [{ text: { content: remarksText } }] }
+                '会場': { rich_text: [{ text: { content: $(cells[3]).text().trim() } }] },
+                '備考': { rich_text: [{ text: { content: $(cells[4]).text().trim() } }] }
               }
             });
-            console.log(`✅ 大会を登録: ${conferenceName}`);
+            console.log(`✅ 大会登録: ${confName}`);
             await new Promise(r => setTimeout(r, 3000));
           }
         }
@@ -93,40 +158,21 @@ async function fetchAllConferences() {
 
 async function generateAutonomousQuestions() {
   try {
-    const prompt = `あなたは高度な専門性を持つリハビリテーション領域の研究者（痛み、物理療法、訪問リハビリテーション、ウィメンズヘルス、教育）であり、理学療法士養成校の教員です。
-最新の知見や臨床的課題、または教育的視点から、今日考えるべき「本質的な問い」を3つ生成してください。
-
-【制約事項】
-・一文は30〜50文字程度。
-・前置きは不要。最後を必ず「？」で終わらせる。
-・端的かつ深い一文。
-
-【出力形式】
-JSON形式: { "actions": [ { "q": "（問いの文章のみ）" } ] }`;
-
+    const prompt = `理学療法士教員の視点で「本質的な問い」を3つJSONで生成せよ。形式: { "actions": [ { "q": "文章" } ] }`;
     const aiRes = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
       model: "llama-3.1-8b-instant",
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" }
     }, { headers: { "Authorization": `Bearer ${GROQ_KEY.trim()}`, "Content-Type": "application/json" } });
-
     const aiData = JSON.parse(aiRes.data.choices[0].message.content);
-
     for (const item of aiData.actions) {
-      const exists = await notion.databases.query({
-        database_id: DB_ACTION_ID,
-        filter: { property: "問い", title: { equals: item.q } }
-      });
-
+      const exists = await notion.databases.query({ database_id: DB_ACTION_ID, filter: { property: "問い", title: { equals: item.q } } });
       if (exists.results.length === 0) {
         await notion.pages.create({
           parent: { database_id: DB_ACTION_ID },
-          properties: { 
-            '問い': { title: [{ text: { content: item.q } }] },
-            'GTD': { status: { name: "Inbox" } }
-          }
+          properties: { '問い': { title: [{ text: { content: item.q } }] }, 'GTD': { status: { name: "Inbox" } } }
         });
-        console.log(`✅ 問いを登録: ${item.q}`);
+        console.log(`✅ 問い登録: ${item.q}`);
       }
     }
   } catch (e) { console.error("問い生成エラー:", e.message); }
@@ -142,110 +188,24 @@ async function fillPubmedDataWithAI() {
     try {
       const response = await axios.get(url, { headers: { "User-Agent": "Mozilla/5.0" }, timeout: 10000 });
       const $ = cheerio.load(response.data);
-      const title = $('h1.heading-title').text().trim() || "タイトル不明";
-      const abstract = $('.abstract-content').text().trim().substring(0, 1500) || "Abstractなし";
-      const journal = $('.journal-actions-trigger').first().text().trim() || "不明";
+      const title = $('h1.heading-title').text().trim();
+      const abstract = $('.abstract-content').text().trim().substring(0, 1500);
       await new Promise(r => setTimeout(r, 20000));
-      const prompt = `抄録を読み、JSONで返せ。1. translatedTitle, 2. journal, 3. summary: である調で180〜200字。\n\nTitle: ${title}\nAbstract: ${abstract}`;
       const aiRes = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
         model: "llama-3.1-8b-instant",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.1,
+        messages: [{ role: "user", content: `翻訳・要約せよ。JSON形式で返せ。{translatedTitle, summary}\nTitle: ${title}\nAbstract: ${abstract}` }],
         response_format: { type: "json_object" }
       }, { headers: { "Authorization": `Bearer ${GROQ_KEY.trim()}`, "Content-Type": "application/json" } });
       const aiData = JSON.parse(aiRes.data.choices[0].message.content);
       await notion.pages.update({
         page_id: page.id,
         properties: {
-          "タイトル和訳": { rich_text: [{ text: { content: aiData.translatedTitle || "" } }] },
-          "ジャーナル名": { rich_text: [{ text: { content: aiData.journal || journal } }] },
-          "要約": { rich_text: [{ text: { content: aiData.summary || "" } }] }
+          "タイトル和訳": { rich_text: [{ text: { content: aiData.translatedTitle } }] },
+          "要約": { rich_text: [{ text: { content: aiData.summary } }] }
         }
       });
+      console.log(`✅ PubMed要約完了: ${aiData.translatedTitle}`);
     } catch (e) { console.error(`❌ PubMedエラー: ${e.message}`); }
-  }
-}
-
-async function fetchNewsDaily() {
-  const sources = [
-    { name: "ICT教育ニュース", url: "https://ict-enews.net/feed/" },
-    { name: "ITmedia AI+", url: "https://rss.itmedia.co.jp/rss/2.0/aiplus.xml" },
-    { name: "テクノエッジ", url: "https://www.techno-edge.net/rss20/index.rdf" },
-    { name: "Zennトレンド", url: "https://zenn.dev/feed" },
-    { name: "Zenn AI", url: "https://zenn.dev/topics/ai/feed" }
-  ];
-  const keywords = ["AI", "Notion", "Gemini", "効率化", "自動化", "IT", "ChatGPT", "生成AI", "理学療法", "GitHub"];
-  for (const source of sources) {
-    try {
-      const feed = await parser.parseURL(source.url);
-      for (const item of feed.items.slice(0, 5)) {
-        const title = item.title.replace(/[\[【].*?[\]】]/g, '').trim();
-        if (keywords.some(kw => title.toUpperCase().includes(kw.toUpperCase()))) {
-          const exists = await notion.databases.query({ database_id: DB_INPUT_ID, filter: { property: "名前", title: { equals: title } } });
-          if (exists.results.length === 0) {
-            const imageUrl = await getImageUrl(item);
-            await createNotionPage(title, item.link, imageUrl, source.name);
-            console.log(`✅ 記事を登録: ${title} (${source.name})`);
-          }
-        }
-      }
-    } catch (e) { console.error(`${source.name}エラー: ${e.message}`); }
-  }
-}
-
-async function getImageUrl(item) {
-  if (item.enclosure && item.enclosure.url) return item.enclosure.url;
-  try {
-    const res = await axios.get(item.link, { headers: { "User-Agent": "Mozilla/5.0" }, timeout: 5000 });
-    const $ = cheerio.load(res.data);
-    return $('meta[property="og:image"]').attr('content') || null;
-  } catch (e) { return null; }
-}
-
-async function createNotionPage(title, link, imageUrl, sourceName) {
-  const children = imageUrl ? [{ object: "block", type: "image", image: { type: "external", external: { url: imageUrl } } }] : [];
-  children.push({ object: "block", type: "bookmark", bookmark: { url: link } });
-  await notion.pages.create({
-    parent: { database_id: DB_INPUT_ID },
-    cover: imageUrl ? { type: "external", external: { url: imageUrl } } : null,
-    properties: { '名前': { title: [{ text: { content: title } }] }, 'URL': { url: link }, '情報源': { select: { name: sourceName } } },
-    children: children
-  });
-}
-
-async function autoCleanupTrash() {
-  const thresholdDate = new Date();
-  thresholdDate.setDate(thresholdDate.getDate() - 7);
-
-  try {
-    const res = await notion.databases.query({
-      database_id: DB_INPUT_ID,
-      filter: {
-        and: [
-          {
-            property: '削除チェック',
-            checkbox: { equals: true }
-          },
-          {
-
-            property: '作成日時',
-            date: {
-              on_or_before: thresholdDate.toISOString()
-            }
-          }
-        ]
-      }
-    });
-
-    for (const page of res.results) {
-      await notion.pages.update({
-        page_id: page.id,
-        archived: true
-      });
-      console.log(`🗑️ 削除確定(作成から1週間経過): ${page.id}`);
-    }
-  } catch (e) {
-    console.error("お掃除エラー:", e.message);
   }
 }
 
