@@ -22,9 +22,9 @@ async function main() {
     console.log("\n=== 4. PubMed要約 ===");
     await fillPubmedDataWithAI();
 
-    console.log("\n=== 5. 専門的な『問い』を生成 ===");
+    console.log("\n=== 5. 専門的な『問い』を自律生成 ===");
     if (DB_ACTION_ID) {
-      await generateQuestionsFromSummaries();
+      await generateAutonomousQuestions();
     } else {
       console.log("⚠️ DB_ACTION_IDが設定されていません。");
     }
@@ -71,7 +71,6 @@ async function fetchAllConferences() {
         if (link && link.startsWith('http')) {
           const exists = await notion.databases.query({ database_id: DB_ACADEMIC_ID, filter: { property: "URL", url: { equals: link } } });
           if (exists.results.length === 0) {
-            // AIで日付を整形
             const dateObj = await formatDateWithAI(dateText);
             
             await notion.pages.create({
@@ -79,14 +78,12 @@ async function fetchAllConferences() {
               properties: {
                 '大会名称': { title: [{ text: { content: conferenceName } }] },
                 'URL': { url: link },
-                // 日付プロパティとして登録
                 '開催年月日': { date: dateObj },
                 '会場': { rich_text: [{ text: { content: venueText } }] },
                 '備考': { rich_text: [{ text: { content: remarksText } }] }
               }
             });
             console.log(`✅ 大会を登録: ${conferenceName}`);
-            // API制限回避のため少し待機
             await new Promise(r => setTimeout(r, 3000));
           }
         }
@@ -95,43 +92,20 @@ async function fetchAllConferences() {
   } catch (e) { console.error("学術大会エラー:", e.message); }
 }
 
-// 既存の関数（generateQuestionsFromSummaries, fillPubmedDataWithAI, fetchNewsDaily, 等）は一切変更なし
-async function generateQuestionsFromSummaries() {
+// 変更箇所：インプットに依存せず、プロンプトで「問い」を直接コントロールする関数
+async function generateAutonomousQuestions() {
   try {
-    const res = await notion.databases.query({
-      database_id: DB_INPUT_ID,
-      filter: { property: "URL", url: { contains: "pubmed.ncbi.nlm.nih.gov" } },
-      sorts: [{ property: "作成日時", direction: "descending" }],
-      page_size: 15
-    });
-
-    const validPages = res.results.filter(page => {
-      const summary = page.properties['要約']?.rich_text[0]?.plain_text || "";
-      return summary.length > 10; 
-    });
-
-    if (validPages.length === 0) return;
-
-    const materials = validPages.map(page => {
-      const title = page.properties['タイトル和訳']?.rich_text[0]?.plain_text || "無題";
-      const summary = page.properties['要約']?.rich_text[0]?.plain_text || "";
-      return `【${title}】: ${summary}`;
-    }).join("\n\n");
-
     const prompt = `あなたは高度な専門性を持つリハビリテーション領域の研究者（痛み、物理療法、訪問リハビリテーション、ウィメンズヘルス、教育）であり、理学療法士養成校の教員です。
-以下の【論文抄録群】を読み、「本質的な問い」を3つ提案してください。
+最新の知見や臨床的課題、または教育的視点から、今日考えるべき「本質的な問い」を3つ生成してください。
 
 【制約事項】
-・「〜の視点から見た」や「〜の観点では」といった前置きは一切不要です。
-・各問いは、必ず最後を「？」で終わらせる疑問文にしてください。
-・端的かつ鋭い一文で表現してください。
-・私の専門領域に根ざした内容にしてください。
+・既存のデータの抄録などは不要です。あなたの知識から、私の専門領域に根ざした鋭い問いを作成してください。
+・「〜の視点から」等の前置きは一切不要。
+・最後を必ず「？」で終わらせる。
+・端的かつ深い一文。
 
 【出力形式】
-JSON形式: { "actions": [ { "q": "（「？」で終わる問いの文章のみ）" } ] }
-
-【論文抄録群】
-${materials}`;
+JSON形式: { "actions": [ { "q": "（問いの文章のみ）" } ] }`;
 
     const aiRes = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
       model: "llama-3.1-8b-instant",
@@ -150,7 +124,10 @@ ${materials}`;
       if (exists.results.length === 0) {
         await notion.pages.create({
           parent: { database_id: DB_ACTION_ID },
-          properties: { '問い': { title: [{ text: { content: item.q } }] } }
+          properties: { 
+            '問い': { title: [{ text: { content: item.q } }] },
+            'GTD': { select: { name: "Inbox" } }
+          }
         });
         console.log(`✅ 問いを登録: ${item.q}`);
       }
