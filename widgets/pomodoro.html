@@ -6,93 +6,97 @@
   <title>Pomodoro Timer</title>
   <style>
     :root {
-      --bg-color: #191919; 
-      --text-color: #FFFFFF;
-      --sub-text: #737373;
-      --focus-color: #eb5757;
-      --break-color: #2eaadc;
+      /* 背景色をより暗く(191919 -> 121212) */
+      --bg-color: #121212; 
+      --text-color: #e0e0e0;
+      --sub-text: #666666;
+      /* ボタンの明度を落として落ち着かせる */
+      --focus-color: #a33c3c;
+      --break-color: #267a9c;
     }
     body {
       background: var(--bg-color);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
       display: flex;
-      /* 中央揃えから左揃えに変更 */
       justify-content: flex-start; 
       align-items: center;
       height: 100vh;
       margin: 0;
-      /* 左側に少し余白を追加 */
-      padding-left: 20px;
+      padding-left: 15px; /* 余白を少し削る */
       color: var(--text-color);
       overflow: hidden;
     }
     
     body.time-up {
-      background: #b91c1c !important;
+      background: #7f1d1d !important; /* 終了時の赤も少し暗めに */
     }
 
     .timer-container {
-      /* テキストも左寄せに */
-      text-align: left;
-      width: 190px;
+      /* 全体サイズを少し小さく (190px -> 160px) */
+      width: 160px;
+      text-align: center; /* 中央寄せ */
     }
     #status {
-      font-size: 0.7rem;
+      font-size: 0.6rem;
       font-weight: 700;
       margin-bottom: 2px;
       color: var(--sub-text);
       text-transform: uppercase;
-      /* ステータスラベルの微調整 */
-      padding-left: 2px;
+      letter-spacing: 0.05em;
     }
     #time {
-      font-size: 3.5rem;
+      /* フォントサイズを少し小さく (3.5rem -> 3.0rem) */
+      font-size: 3.0rem;
       font-weight: 700;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
       font-variant-numeric: tabular-nums;
       line-height: 1;
+      text-align: center;
     }
     .settings {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 15px;
+      margin-bottom: 12px;
     }
     .setting-group {
       display: flex;
       flex-direction: column;
-      align-items: flex-start; /* 入力欄も左寄せ */
-      width: 48%;
-      font-size: 0.6rem;
+      align-items: center; /* 設定項目も中央寄せ */
+      width: 45%;
+      font-size: 0.55rem;
       color: var(--sub-text);
     }
     .setting-group input {
-      width: 35px;
+      width: 30px;
       border: none;
       border-bottom: 1px solid #333;
-      padding: 2px 0;
-      text-align: left; /* 数字を左寄せ */
+      padding: 1px 0;
+      text-align: center; /* 数字も中央 */
       color: var(--text-color);
       background: transparent;
       outline: none;
+      font-size: 0.75rem;
     }
     .controls {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
     button {
       cursor: pointer;
       border: none;
-      padding: 10px 0;
-      border-radius: 6px;
+      padding: 8px 0;
+      border-radius: 5px;
       font-weight: 700;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       width: 100%;
       text-align: center;
+      transition: opacity 0.2s;
     }
-    #focusBtn { background: var(--focus-color); color: white; }
-    #breakBtn { background: var(--break-color); color: white; }
-    #stopBtn { background: #252525; color: var(--sub-text); }
+    button:active { opacity: 0.7; }
+    #focusBtn { background: var(--focus-color); color: rgba(255,255,255,0.9); }
+    #breakBtn { background: var(--break-color); color: rgba(255,255,255,0.9); }
+    #stopBtn { background: #222222; color: #555555; }
   </style>
 </head>
 <body id="bodyTag">
@@ -131,16 +135,19 @@
 
     function notify() {
       body.classList.add('time-up');
+      
+      // タブタイトルの点滅（OS通知オフでも視覚的に気づけるように）
       let toggle = true;
       alertInterval = setInterval(() => {
-        document.title = toggle ? "！！！時間です！！！" : "　　　　　　　　　";
+        document.title = toggle ? "【！】終了しました" : "　　　　　　　　";
         toggle = !toggle;
       }, 500);
 
+      // 強制的に前面に出るアラート（Windows設定を無視して通知可能）
       setTimeout(() => {
         alert("タイマーが終了しました！");
         stopAlert();
-      }, 100);
+      }, 50);
     }
 
     function stopAlert() {
@@ -166,8 +173,8 @@
       }, 1000);
     }
 
-    document.getElementById('focusBtn').onclick = () => startTimer(document.getElementById('focusInput').value, "Focus", "var(--focus-color)");
-    document.getElementById('breakBtn').onclick = () => startTimer(document.getElementById('breakInput').value, "Break", "var(--break-color)");
+    document.getElementById('focusBtn').onclick = () => startTimer(document.getElementById('focusInput').value, "Focus", "#eb5757");
+    document.getElementById('breakBtn').onclick = () => startTimer(document.getElementById('breakInput').value, "Break", "#2eaadc");
     document.getElementById('stopBtn').onclick = () => {
       if (timerId) clearInterval(timerId);
       stopAlert();
