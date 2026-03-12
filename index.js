@@ -9,7 +9,6 @@ const GROQ_KEY = process.env.GROQ_API_KEY;
 const DB_ACADEMIC_ID = process.env.DB_ACADEMIC_EVENT_ID; 
 const DB_ACTION_ID = process.env.DB_ACTION_ID; 
 
-// 404対策: RSSパーサー自体にブラウザのふりをするヘッダーを設定
 const parser = new Parser({
   headers: {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
@@ -39,7 +38,7 @@ async function fetchNewsDaily() {
     { name: "ICT教育ニュース", url: "https://ict-enews.net/feed/" },
     { name: "ITmedia AI+", url: "https://rss.itmedia.co.jp/rss/2.0/aiplus.xml" },
     { name: "テクノエッジ", url: "https://www.techno-edge.net/rss20/index.rdf" },
-    { name: "Zenn", url: "https://zenn.dev/feed" } // 統合版URL
+    { name: "Zenn", url: "https://zenn.dev/feed" } 
   ];
   
   const keywords = ["AI", "Notion", "Gemini", "効率化", "自動化", "IT", "ChatGPT", "生成AI", "理学療法", "GitHub", "Python"];
@@ -69,11 +68,9 @@ async function fetchNewsDaily() {
 }
 
 async function getImageUrl(item) {
-  // RSSに画像URLが入っている場合はそれを使う
   if (item.enclosure && item.enclosure.url) return item.enclosure.url;
   
   try {
-    // 404対策を施したヘッダーで記事ページを取得
     const res = await axios.get(item.link, { 
       headers: { 
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
@@ -83,7 +80,6 @@ async function getImageUrl(item) {
     });
     const $ = cheerio.load(res.data);
     
-    // OGP画像を抽出
     return $('meta[property="og:image"]').attr('content') || 
            $('meta[name="twitter:image"]').attr('content') || 
            null;
