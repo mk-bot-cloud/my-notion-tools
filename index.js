@@ -214,13 +214,36 @@ async function createNotionPage(title, link, imageUrl, sourceName) {
 async function autoCleanupTrash() {
   const thresholdDate = new Date();
   thresholdDate.setDate(thresholdDate.getDate() - 7);
+
   try {
     const res = await notion.databases.query({
       database_id: DB_INPUT_ID,
-      filter: { and: [{ property: '削除チェック', checkbox: { equals: true } }, { property: '作成日時', date: { on_or_before: thresholdDate.toISOString() } }] }
+      filter: {
+        and: [
+          {
+            property: '削除チェック',
+            checkbox: { equals: true }
+          },
+          {
+            timestamp: "last_edited_time",
+            last_edited_time: {
+              on_or_before: thresholdDate.toISOString()
+            }
+          }
+        ]
+      }
     });
-    for (const page of res.results) { await notion.pages.update({ page_id: page.id, archived: true }); }
-  } catch (e) { console.error("お掃除エラー:", e.message); }
+
+    for (const page of res.results) {
+      await notion.pages.update({
+        page_id: page.id,
+        archived: true
+      });
+      console.log(`🗑️ 削除確定(チェック後1週間経過): ${page.id}`);
+    }
+  } catch (e) {
+    console.error("お掃除エラー:", e.message);
+  }
 }
 
 main();
