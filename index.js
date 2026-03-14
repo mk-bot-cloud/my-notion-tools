@@ -6,7 +6,6 @@ const Parser = require('rss-parser');
 const notion = new Client({ auth: process.env.NOTION_TOKEN });
 const DB_INPUT_ID = process.env.DB_INPUT_ID;
 const GROQ_KEY = process.env.GROQ_API_KEY; 
-const DB_ACADEMIC_ID = process.env.DB_ACADEMIC_EVENT_ID; 
 const DB_ACTION_ID = process.env.DB_ACTION_ID; 
 
 const parser = new Parser({
@@ -20,13 +19,14 @@ async function main() {
   try {
     console.log("=== 1. ニュース・技術情報の収集 (Zenn統合・画像強化版) ===");
     await fetchNewsDaily();
+
     console.log("\n=== 2. 自動お掃除 (作成から7日経過) ===");
     await autoCleanupTrash();
-    console.log("\n=== 3. 学術大会情報 ===");
-    if (DB_ACADEMIC_ID) await fetchAllConferences();
-    console.log("\n=== 4. PubMed要約 ===");
+
+    console.log("\n=== 3. PubMed要約 ===");
     await fillPubmedDataWithAI();
-    console.log("\n=== 5. 専門的な『問い』を自律生成 ===");
+
+    console.log("\n=== 4. 専門的な『問い』を自律生成 ===");
     if (DB_ACTION_ID) await generateAutonomousQuestions();
 
     console.log("\n✨ すべての処理が正常に完了しました");
@@ -121,51 +121,6 @@ async function createNotionPage(title, link, imageUrl, sourceName) {
     },
     children: children
   });
-}
-
-async function formatDateWithAI(dateText) {
-  try {
-    const prompt = `学会日程を解析しJSON生成。形式YYYY-MM-DD。\n【日程】: ${dateText}\n【出力形式】: { "start": "YYYY-MM-DD", "end": "YYYY-MM-DD" or null }`;
-    const aiRes = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
-      model: "llama-3.1-8b-instant",
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" }
-    }, { headers: { "Authorization": `Bearer ${GROQ_KEY.trim()}`, "Content-Type": "application/json" } });
-    return JSON.parse(aiRes.data.choices[0].message.content);
-  } catch (e) { return null; }
-}
-
-async function fetchAllConferences() {
-  try {
-    const res = await axios.get("https://www.jspt.or.jp/conference/", { headers: { "User-Agent": "Mozilla/5.0" } });
-    const $ = cheerio.load(res.data);
-    const rows = $('table tbody tr').get();
-    for (const row of rows) {
-      const cells = $(row).find('td');
-      if (cells.length >= 5) {
-        const confName = $(cells[1]).text().trim();
-        const link = $(cells[1]).find('a').attr('href');
-        if (link && link.startsWith('http')) {
-          const exists = await notion.databases.query({ database_id: DB_ACADEMIC_ID, filter: { property: "URL", url: { equals: link } } });
-          if (exists.results.length === 0) {
-            const dateObj = await formatDateWithAI($(cells[2]).text().trim());
-            await notion.pages.create({
-              parent: { database_id: DB_ACADEMIC_ID },
-              properties: {
-                '大会名称': { title: [{ text: { content: confName } }] },
-                'URL': { url: link },
-                '開催年月日': { date: dateObj },
-                '会場': { rich_text: [{ text: { content: $(cells[3]).text().trim() } }] },
-                '備考': { rich_text: [{ text: { content: $(cells[4]).text().trim() } }] }
-              }
-            });
-            console.log(`✅ 大会登録: ${confName}`);
-            await new Promise(r => setTimeout(r, 3000));
-          }
-        }
-      }
-    }
-  } catch (e) { console.error("学術大会エラー:", e.message); }
 }
 
 async function generateAutonomousQuestions() {
